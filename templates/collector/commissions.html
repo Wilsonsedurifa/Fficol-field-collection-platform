@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% load static tz %}
+
+{% block title %}Commissions | FiCol{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<style>
+.comm-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.comm-header {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.comm-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 6px;
+}
+.comm-header p {
+  font-size: 14px;
+  color: var(--text-subtle, #64748b);
+  margin: 0;
+}
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.metric-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.metric-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.metric-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-subtle, #64748b);
+}
+.metric-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-emerald { background: #d1fae5; color: #065f46; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-slate { background: #f1f5f9; color: #475569; }
+.badge-rose { background: #ffe4e6; color: #9f1239; }
+.metric-amount {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+.metric-desc {
+  font-size: 12px;
+  color: var(--text-subtle, #64748b);
+  margin-top: 4px;
+}
+.comm-section {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.section-title {
+  font-size: 17px;
+  font-weight: 750;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 16px;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  padding-bottom: 12px;
+}
+.comm-table-wrap {
+  overflow-x: auto;
+}
+.comm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+.comm-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.comm-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+.comm-table tr:hover td {
+  background: #fafafa;
+}
+.empty-msg {
+  padding: 28px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+</style>
+{% endblock %}
+
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Commissions" %}{% endblock %}
+
+{% block content %}
+{% timezone "Asia/Manila" %}
+<main class="comm-page" aria-label="Collector commissions and payouts">
+  <!-- Header -->
+  <header class="comm-header">
+    <h1>Information Commissions &amp; Payouts</h1>
+    <p>Commission records are created when Back Office approves the information and an active client earning rate applies. Amounts are separated by stage to avoid double-counting.</p>
+  </header>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-top">
+        <span class="metric-label">Awaiting Approval</span>
+        <span class="metric-badge badge-amber">Under Audit</span>
+      </div>
+      <div class="metric-amount">₱{{ summary.awaiting_approval|floatformat:2 }}</div>
+      <div class="metric-desc">Validated proposals undergoing commission audit</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-top">
+        <span class="metric-label">Approved (Unpaid)</span>
+        <span class="metric-badge badge-emerald">Verified</span>
+      </div>
+      <div class="metric-amount">₱{{ summary.approved_unpaid|floatformat:2 }}</div>
+      <div class="metric-desc">Supervisor-approved earnings awaiting disbursement</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-top">
+        <span class="metric-label">Disbursed</span>
+        <span class="metric-badge badge-blue">Paid</span>
+      </div>
+      <div class="metric-amount">₱{{ summary.paid_out|floatformat:2 }}</div>
+      <div class="metric-desc">Total company payouts disbursed to date</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-top">
+        <span class="metric-label">Lifetime Total</span>
+        <span class="metric-badge badge-slate">Cumulative</span>
+      </div>
+      <div class="metric-amount">₱{{ summary.total|floatformat:2 }}</div>
+      <div class="metric-desc">Total earned across approved updates with active rates</div>
+    </div>
+  </div>
+
+  <!-- Recent Commissions Table -->
+  <section class="comm-section" aria-labelledby="comm-history-heading">
+    <h2 id="comm-history-heading" class="section-title">Information Commissions</h2>
+    <div class="comm-table-wrap">
+      <table class="comm-table">
+        <thead>
+          <tr>
+            <th scope="col">Account</th>
+            <th scope="col">Client</th>
+            <th scope="col">Category</th>
+            <th scope="col">Rate Version</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Status</th>
+            <th scope="col">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in commissions %}
+          <tr>
+            <td style="font-weight: 700; color: #0f172a;">{{ c.proposal.account.reference }}</td>
+            <td>{{ c.client.code }}</td>
+            <td>{{ c.get_category_display }}</td>
+            <td style="font-family: monospace;">v{{ c.rule_version }}</td>
+            <td style="font-weight: 700; color: #0f172a;">₱{{ c.amount|floatformat:2 }}</td>
+            <td>
+              <span class="metric-badge {% if c.status == 'approved' %}badge-emerald{% elif c.status == 'rejected' %}badge-rose{% elif c.status == 'paid' %}badge-blue{% else %}badge-amber{% endif %}">
+                {{ c.get_status_display }}
+              </span>
+            </td>
+            <td>{{ c.created_at|date:"d M Y, g:i A" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="empty-msg">
+              No commission records yet. Commission records are created when Back Office approves submitted information and an active client earning rate applies.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Company Payouts Table -->
+  <section class="comm-section" aria-labelledby="payouts-history-heading">
+    <h2 id="payouts-history-heading" class="section-title">Company Payouts</h2>
+    <div class="comm-table-wrap">
+      <table class="comm-table">
+        <thead>
+          <tr>
+            <th scope="col">Payout #</th>
+            <th scope="col">Client</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Commissions</th>
+            <th scope="col">Status</th>
+            <th scope="col">Disbursement Reference</th>
+            <th scope="col">Date Paid</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in payouts %}
+          <tr>
+            <td style="font-weight: 700; color: #0f172a;">#{{ p.pk }}</td>
+            <td>{{ p.client.code }}</td>
+            <td style="font-weight: 700; color: #0f172a;">₱{{ p.amount|floatformat:2 }}</td>
+            <td>{{ p.items.count }} item{{ p.items.count|pluralize }}</td>
+            <td>
+              <span class="metric-badge {% if p.status == 'approved' %}badge-emerald{% elif p.status == 'paid' %}badge-blue{% else %}badge-amber{% endif %}">
+                {{ p.get_status_display }}
+              </span>
+            </td>
+            <td style="font-family: monospace;">{{ p.reference|default:"Pending" }}</td>
+            <td>
+              {% if p.paid_at %}
+              {{ p.paid_at|date:"d M Y, g:i A" }}
+              {% else %}
+              &mdash;
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="empty-msg">
+              No company payouts recorded yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+{% endtimezone %}
+{% endblock %}

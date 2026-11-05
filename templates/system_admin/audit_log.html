@@ -1,0 +1,202 @@
+{% extends "system_admin/base.html" %}
+{% load static %}
+{% block title %}Administrative activity | FiCol System Admin{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/audit_log.css' %}">{% endblock %}
+{% block admin_content %}
+<div class="sa-container audit-log">
+  <header class="al-header">
+    <div class="al-header-text">
+      <h1 class="al-title">Administrative activity</h1>
+      <p class="al-subtitle">Administrative Audit Log of platform actions, security events, and configuration changes.</p>
+    </div>
+    {% if export_url %}
+      <div class="al-header-actions">
+        <a href="{{ export_url }}" class="al-btn al-btn-outline">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export CSV
+        </a>
+      </div>
+    {% endif %}
+  </header>
+
+  <section class="al-card al-filters" aria-label="Filter audit events">
+    <form method="get" action="{% url 'system_admin_audit' %}">
+      <div class="al-filter-grid">
+        <div class="al-filter-field">
+          <label for="audit-range" class="al-filter-label">Date range</label>
+          <select id="audit-range" name="range" class="al-select">
+            {% for value, label in range_options %}
+              <option value="{{ value }}"{% if filters.range == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="al-filter-field">
+          <label for="audit-from" class="al-filter-label">From (custom range)</label>
+          <input type="date" id="audit-from" name="from" value="{{ filters.from }}" class="al-input">
+        </div>
+        <div class="al-filter-field">
+          <label for="audit-to" class="al-filter-label">To (custom range)</label>
+          <input type="date" id="audit-to" name="to" value="{{ filters.to }}" class="al-input">
+        </div>
+        <div class="al-filter-field">
+          <label for="audit-action" class="al-filter-label">Action</label>
+          <select id="audit-action" name="action" class="al-select">
+            <option value="">All administrative actions</option>
+            {% for code, label in action_options %}
+              <option value="{{ code }}"{% if filters.action == code %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="al-filter-field">
+          <label for="audit-actor" class="al-filter-label">Actor</label>
+          <input type="text" id="audit-actor" name="actor" value="{{ filters.actor }}" placeholder="Username" class="al-input">
+        </div>
+        <div class="al-filter-field al-filter-actions-field">
+          <label class="al-filter-label">Actions</label>
+          <div class="al-filter-buttons">
+            <button class="al-btn al-btn-primary" type="submit">Apply</button>
+            <a href="{% url 'system_admin_audit' %}" class="al-btn al-btn-outline">Clear</a>
+          </div>
+        </div>
+      </div>
+    </form>
+    {% if active_filters %}
+      <nav class="al-active-filters" aria-label="Active filters">
+        <span class="al-active-filters-title">Active filters:</span>
+        {% for filter in active_filters %}
+          <a href="{{ filter.url }}" class="al-filter-chip" aria-label="Remove {{ filter.label }} filter">
+            <span>{{ filter.label }}</span>
+            <span class="al-chip-remove" aria-hidden="true">&times;</span>
+          </a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+  </section>
+
+  <section class="al-stats-grid" aria-label="Filtered event summary">
+    {% for card in summary_cards %}
+      <div class="al-stat-card">
+        <div class="al-stat-icon-wrap {% if card.label == 'Events' %}al-stat-icon-events{% elif card.label == 'Unique actors' %}al-stat-icon-actors{% elif card.label == 'Status changes' %}al-stat-icon-statuses{% elif card.label == 'Users created' %}al-stat-icon-users{% endif %}" aria-hidden="true">
+          {% if card.label == "Events" %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          {% elif card.label == "Unique actors" %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          {% elif card.label == "Status changes" %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+          {% elif card.label == "Users created" %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+          {% else %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+          {% endif %}
+        </div>
+        <div class="al-stat-info">
+          <span class="al-stat-label">{{ card.label }}</span>
+          <strong class="al-stat-number">{{ card.value }}</strong>
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+
+  <section class="al-card al-events-card" aria-label="Audit events">
+    {% now "Y-m-d" as today_date %}
+    {% for row in rows %}
+      {% ifchanged row.event.created_at.date %}
+        <div class="al-date-header">
+          <svg class="al-date-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span class="al-date-title">
+            {% if row.event.created_at|date:"Y-m-d" == today_date %}Today &middot; {{ row.event.created_at|date:"M j, Y" }}{% else %}{{ row.event.created_at|date:"M j, Y" }}{% endif %}
+          </span>
+        </div>
+      {% endifchanged %}
+      <article class="al-event-row">
+        <time class="al-time-col" datetime="{{ row.event.created_at|date:'c' }}">
+          <span class="al-time-text">{{ row.event.created_at|date:"g:i A" }}</span>
+        </time>
+        <div class="al-icon-col">
+          <span class="al-event-icon {% if 'created' in row.event.action %}al-tone-created{% elif 'invitation_sent' in row.event.action or 'invitation_resent' in row.event.action %}al-tone-invitation-sent{% elif 'accepted' in row.event.action or 'activated' in row.event.action %}al-tone-activated{% elif 'status' in row.event.action or 'access' in row.event.action or 'updated' in row.event.action or 'changed' in row.event.action or 'suspended' in row.event.action or 'converted' in row.event.action or 'warning' in row.event.action or 'reset' in row.event.action %}al-tone-status-changed{% else %}al-tone-{{ row.color }}{% endif %}" aria-hidden="true">{{ row.icon }}</span>
+        </div>
+        <div class="al-content-col">
+          <div class="al-content-heading">
+            <span class="al-sentence">
+              {% if row.event.actor %}
+                <strong class="al-actor">{{ row.event.actor.username }}</strong>{{ row.sentence|cut:row.event.actor.username }}
+              {% else %}
+                <strong class="al-actor">System</strong>{{ row.sentence|cut:"System" }}
+              {% endif %}
+            </span>
+            {% if row.entity_url %}
+              <a href="{{ row.entity_url }}" class="al-entity-pill">{{ row.event.entity_type }} #{{ row.event.entity_id }}</a>
+            {% else %}
+              <span class="al-entity-pill al-entity-pill-static">{{ row.event.entity_type }} #{{ row.event.entity_id }}</span>
+            {% endif %}
+          </div>
+          {% if row.chips %}
+            <div class="al-chips-row">
+              {% for chip in row.chips %}
+                <span class="al-chip">
+                  <span class="al-chip-label">{{ chip.label }}</span>
+                  {% if chip.pair %}
+                    <span class="al-chip-val al-tone-{{ chip.before_color }}">{{ chip.before }}</span>
+                    <span class="al-chip-arrow" aria-label="changed to">&rarr;</span>
+                  {% endif %}
+                  <span class="al-chip-val al-tone-{{ chip.after_color }}">{{ chip.after }}</span>
+                </span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <details class="al-raw-details">
+            <summary class="al-raw-summary">View raw data</summary>
+            <div class="al-raw-panel">
+              <p class="al-raw-code"><code>{{ row.event.action }}</code></p>
+              <pre class="al-raw-pre">{{ row.raw }}</pre>
+            </div>
+          </details>
+        </div>
+      </article>
+    {% empty %}
+      <p class="al-empty">No audit events found. Try a different filter.</p>
+    {% endfor %}
+    <footer class="al-footer">
+      <span class="al-footer-count">Showing {{ rows|length }} of {{ page_obj.paginator.count }} events</span>
+      <nav class="al-pagination" aria-label="Audit pagination">
+        {% if previous_url %}
+          <a href="{{ previous_url }}" class="al-page-link">Previous</a>
+        {% else %}
+          <span class="al-page-link al-page-link-disabled" aria-disabled="true">Previous</span>
+        {% endif %}
+        <span class="al-page-current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if next_url %}
+          <a href="{{ next_url }}" class="al-page-link">Next</a>
+        {% else %}
+          <span class="al-page-link al-page-link-disabled" aria-disabled="true">Next</span>
+        {% endif %}
+      </nav>
+    </footer>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline &bull; FiCol</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  <style>
+    .offline-card {
+      text-align: center;
+    }
+    .offline-icon {
+      margin: 0 auto 1.25rem;
+      display: flex;
+      justify-content: center;
+    }
+    .offline-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-slate-900, #0F172A);
+      margin-bottom: 0.75rem;
+    }
+    .offline-message {
+      font-size: 0.9375rem;
+      color: var(--color-slate-600, #475569);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .offline-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: var(--min-touch-target, 48px);
+      padding: 0.75rem 1.25rem;
+      background-color: var(--color-blue-primary, #1D4ED8);
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      border-radius: var(--radius-sm, 6px);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.15s ease;
+    }
+    .offline-button:hover,
+    .offline-button:focus-visible {
+      background-color: var(--color-blue-hover, #1E40AF);
+      outline: 2px solid #93C5FD;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <main class="login-container offline-card" role="main">
+    <div class="offline-icon" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="10" fill="#1D4ED8"/>
+        <path d="M12 28V12H28V16H17V18H26V22H17V28H12Z" fill="#FFFFFF"/>
+        <circle cx="28" cy="28" r="3.5" fill="#93C5FD"/>
+      </svg>
+    </div>
+
+    <h1 class="offline-title">You are currently offline</h1>
+    <p class="offline-message">
+      FiCol requires an active internet connection to load fresh account information and securely process updates. Please check your network connection and try again.
+    </p>
+
+    <button type="button" class="offline-button" onclick="window.location.reload()">
+      Try again
+    </button>
+  </main>
+</body>
+</html>

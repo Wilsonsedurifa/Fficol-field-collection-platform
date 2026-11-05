@@ -1,0 +1,6 @@
+Customer Name,Account No,Principal,Balance,Phone,Address,Barangay,City,Latitude,Longitude,Due Date,Notes
+Juan Dela Cruz,TRIAL-20261021-001,25000.00,28500.00,09171234567,123 Caruncho Ave,San Nicolas,Pasig,14.558500,121.082000,2026-11-15,Trial record with supplied GPS coordinates.
+Maria Santos,TRIAL-20261021-002,15000.00,16800.00,09289876543,45 Commonwealth Ave,Batasan Hills,Quezon City,,,2026-11-20,Trial record for automatic geocoding.
+Pedro Reyes,TRIAL-20261021-003,50000.00,54200.00,09395551234,Block 5 Lot 12 Acacia St,Pinagbuhatan,Pasig,14.552100,121.096500,2026-11-25,Trial record with supplied GPS coordinates.
+Elena Bautista,TRIAL-20261021-004,32000.00,35400.00,09187778899,78 General Luna St,Tuktukan,Taguig,14.526000,121.072000,2026-11-28,Trial record with supplied GPS coordinates.
+Ricardo Dalisay,TRIAL-20261021-005,18500.00,20100.00,09081112233,204 Boni Ave,Plainview,Mandaluyong,,,2026-12-05,Trial record for automatic geocoding.

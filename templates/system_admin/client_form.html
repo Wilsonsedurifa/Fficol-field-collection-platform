@@ -1,0 +1,67 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}
+  {% if is_create %}Create Client{% else %}Edit Client {{ client.code }}{% endif %} | FiCol System Admin
+{% endblock %}
+
+{% block admin_content %}
+<div class="sa-container sa-container-narrow">
+  <div class="sa-page-header">
+    <div>
+      <h2 class="sa-page-title">
+        {% if is_create %}Create Client{% else %}Edit Client: {{ client.code }}{% endif %}
+      </h2>
+      <p class="sa-page-desc">
+        {% if is_create %}
+          Register a new client organization in the system.
+        {% else %}
+          Update client details and operational availability.
+        {% endif %}
+      </p>
+    </div>
+    <div class="sa-page-actions">
+      <a href="{% url 'system_admin_clients' %}" class="sa-btn sa-btn-secondary">&larr; Back to Clients</a>
+    </div>
+  </div>
+
+  <div class="sa-card">
+    <form method="post" action="{% if is_create %}{% url 'system_admin_client_create' %}{% else %}{% url 'system_admin_client_edit' client.pk %}{% endif %}" class="sa-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="sa-alert sa-alert-danger" role="alert">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div class="sa-form-group">
+        <label for="{{ form.code.id_for_label }}" class="sa-label">Client Code <span class="sa-required">*</span></label>
+        {{ form.code }}
+        {% if form.code.errors %}<p class="sa-field-error">{{ form.code.errors.0 }}</p>{% endif %}
+        <p class="sa-help-text">Unique uppercase identifier for this client (e.g. CLI-001).</p>
+      </div>
+
+      <div class="sa-form-group">
+        <label for="{{ form.name.id_for_label }}" class="sa-label">Organization Name <span class="sa-required">*</span></label>
+        {{ form.name }}
+        {% if form.name.errors %}<p class="sa-field-error">{{ form.name.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="sa-form-group sa-checkbox-group">
+        <label class="sa-checkbox-label">
+          {{ form.is_active }}
+          <span>Active Client (uncheck to suspend all collector and back office operations for this client)</span>
+        </label>
+        {% if form.is_active.errors %}<p class="sa-field-error">{{ form.is_active.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="sa-form-actions">
+        <button type="submit" class="sa-btn sa-btn-primary">
+          {% if is_create %}Create Client{% else %}Save Changes{% endif %}
+        </button>
+        <a href="{% url 'system_admin_clients' %}" class="sa-btn sa-btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

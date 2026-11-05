@@ -1,0 +1,162 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<p class="bo-description">Batch approved commissions into company payouts per client and collector. FiCol records company disbursement records; payouts never handle customer funds, payment gateways, or customer account balances.</p>
+
+<!-- Create Draft Payout Section -->
+<section class="mb-8 rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm" aria-labelledby="create-payout-heading">
+  <h2 id="create-payout-heading" class="text-lg font-bold text-slate-900">Create Payout Batch</h2>
+  <p class="mt-1 text-sm text-slate-600">Group approved, unpaid commissions into a draft disbursement batch.</p>
+
+  {% if eligible_pairs %}
+  <form method="post" action="{% url 'create_payout_form' %}" class="mt-5 grid gap-4 sm:grid-cols-3 items-end">
+    {% csrf_token %}
+    <div class="sm:col-span-2">
+      <label for="id_pair" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">Eligible Client &amp; Collector Group</label>
+      <select id="id_pair" name="pair" required onchange="
+        var parts = this.value.split(':');
+        document.getElementById('hidden_client_id').value = parts[0] || '';
+        document.getElementById('hidden_collector_id').value = parts[1] || '';
+      " class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        <option value="">Select client and collector group...</option>
+        {% for p in eligible_pairs %}
+        <option value="{{ p.client_id }}:{{ p.collector_id }}">
+          {{ p.client__name }} ({{ p.client__code }}) &mdash; {{ p.collector__user__username }} ({{ p.comm_count }} commission{{ p.comm_count|pluralize }}, ₱{{ p.total_amount|floatformat:2 }})
+        </option>
+        {% endfor %}
+      </select>
+      <input type="hidden" id="hidden_client_id" name="client_id">
+      <input type="hidden" id="hidden_collector_id" name="collector_id">
+    </div>
+
+    <div>
+      <button type="submit" class="min-h-11 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        Generate Draft Payout
+      </button>
+    </div>
+  </form>
+  {% else %}
+  <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+    No approved, unpaid commissions are currently available for payout batching. Commissions must be approved before they can be batched.
+  </div>
+  {% endif %}
+</section>
+
+<!-- Payout Status Filters -->
+<nav class="mb-5 flex flex-wrap gap-2" aria-label="Payout status filters">
+  <a href="?state=draft" {% if payout_state == 'draft' %}aria-current="page"{% endif %} class="min-h-11 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold {% if payout_state == 'draft' %}bg-indigo-600 text-white{% else %}bg-white text-slate-700{% endif %}">Draft {{ payout_counts.draft }}</a>
+  <a href="?state=approved" {% if payout_state == 'approved' %}aria-current="page"{% endif %} class="min-h-11 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold {% if payout_state == 'approved' %}bg-indigo-600 text-white{% else %}bg-white text-slate-700{% endif %}">Approved {{ payout_counts.approved }}</a>
+  <a href="?state=paid" {% if payout_state == 'paid' %}aria-current="page"{% endif %} class="min-h-11 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold {% if payout_state == 'paid' %}bg-indigo-600 text-white{% else %}bg-white text-slate-700{% endif %}">Paid {{ payout_counts.paid }}</a>
+</nav>
+
+<p class="mb-4 text-sm text-slate-600">{{ page_obj.paginator.count }} payout record{{ page_obj.paginator.count|pluralize }} · Philippine time</p>
+
+<!-- Payouts List -->
+<div class="space-y-5">
+  {% for payout in payouts %}
+  <article class="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{{ payout.client.code }}</span>
+          <h2 class="text-lg font-bold text-slate-900">Payout #{{ payout.pk }}</h2>
+        </div>
+        <p class="mt-1 text-sm text-slate-600">Collector: <strong class="text-slate-800">{{ payout.collector.user.get_full_name|default:payout.collector.user.username }}</strong> &bull; Client: {{ payout.client.name }}</p>
+      </div>
+      <div class="flex flex-col items-end gap-1">
+        <span class="rounded-full px-3 py-1 text-xs font-semibold {% if payout.status == 'approved' %}bg-emerald-50 text-emerald-800{% elif payout.status == 'paid' %}bg-blue-50 text-blue-800{% else %}bg-amber-50 text-amber-800{% endif %}">
+          {{ payout.get_status_display }}
+        </span>
+        <strong class="text-2xl font-bold text-slate-900">₱{{ payout.amount|floatformat:2 }}</strong>
+      </div>
+    </div>
+
+    <dl class="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-4 border-t border-slate-100 pt-3">
+      <div>
+        <dt class="text-xs text-slate-500">Drafted By</dt>
+        <dd class="mt-1 text-sm text-slate-800">{{ payout.created_by.username }} ({{ payout.created_at|date:"d M Y, g:i A" }})</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-500">Approved By</dt>
+        <dd class="mt-1 text-sm text-slate-800">
+          {% if payout.approved_by %}
+          {{ payout.approved_by.username }} ({{ payout.approved_at|date:"d M Y, g:i A" }})
+          {% else %}
+          &mdash;
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-500">Paid By</dt>
+        <dd class="mt-1 text-sm text-slate-800">
+          {% if payout.paid_by %}
+          {{ payout.paid_by.username }} ({{ payout.paid_at|date:"d M Y, g:i A" }})
+          {% else %}
+          &mdash;
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-500">Disbursement Reference</dt>
+        <dd class="mt-1 text-sm font-mono text-slate-800">{{ payout.reference|default:"Pending payment" }}</dd>
+      </div>
+    </dl>
+
+    <!-- Grouped Commissions Summary -->
+    <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Settled Commissions ({{ payout.items.count }})</h3>
+      <div class="space-y-1">
+        {% for item in payout.items.all %}
+        <div class="flex items-center justify-between text-xs text-slate-700 py-1 border-b border-slate-200 last:border-0">
+          <span>Commission #{{ item.commission_id }} &bull; Account: {{ item.commission.proposal.account.reference }} &bull; {{ item.commission.get_category_display }} (v{{ item.commission.rule_version }})</span>
+          <span class="font-bold text-slate-900">₱{{ item.amount|floatformat:2 }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Actions -->
+    {% if payout.status == 'draft' %}
+    <form method="post" action="{% url 'approve_payout_form' payout.pk %}" class="mt-4 border-t border-slate-200 pt-3">
+      {% csrf_token %}
+      <div class="flex items-center justify-between">
+        <p class="text-xs text-slate-500">Confirm audit review of included commissions before approving.</p>
+        <button type="submit" class="min-h-11 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">
+          Approve Payout
+        </button>
+      </div>
+    </form>
+    {% elif payout.status == 'approved' %}
+    <form method="post" action="{% url 'mark_payout_paid_form' payout.pk %}" class="mt-4 border-t border-slate-200 pt-3 flex flex-wrap items-end gap-3">
+      {% csrf_token %}
+      <div class="flex-1 min-w-[200px]">
+        <label for="payout-ref-{{ payout.pk }}" class="mb-1 block text-xs font-semibold text-slate-700">Disbursement Reference (e.g. check number, bank transfer ID, voucher code)</label>
+        <input id="payout-ref-{{ payout.pk }}" name="reference" type="text" maxlength="100" required placeholder="REF-2026-XXXX" class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+      </div>
+      <button type="submit" class="min-h-11 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+        Record Payout as Paid
+      </button>
+    </form>
+    {% endif %}
+  </article>
+  {% empty %}
+  <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+    No payout records in this status.
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav class="mt-6 flex justify-center gap-2" aria-label="Payouts pagination">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}&amp;state={{ payout_state }}" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">Previous</a>
+  {% endif %}
+  <span class="inline-flex items-center px-3 py-2 text-sm text-slate-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}&amp;state={{ payout_state }}" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">Next</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% endtimezone %}{% endblock %}

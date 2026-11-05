@@ -1,0 +1,164 @@
+/* FiCol Collector Help & Support Styles */
+.help-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.help-header {
+  margin-bottom: 24px;
+}
+
+.help-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 6px;
+  line-height: 1.25;
+}
+
+.help-subtitle {
+  font-size: 14px;
+  color: var(--text-subtle, #64748b);
+  margin: 0;
+}
+
+.help-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.help-callout-banner {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+.callout-banner-title {
+  font-size: 16px;
+  font-weight: 750;
+  color: #14532d;
+  margin: 0 0 12px;
+}
+
+.callout-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.callout-list li {
+  font-size: 13.5px;
+  color: #166534;
+  line-height: 1.5;
+}
+
+.callout-list strong {
+  color: #14532d;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.help-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 22px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-card-title {
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 10px;
+  line-height: 1.3;
+}
+
+.help-card p {
+  font-size: 13.5px;
+  color: var(--text-muted, #334155);
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.help-card-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.help-card-list li {
+  font-size: 13px;
+  color: var(--text-muted, #334155);
+  line-height: 1.5;
+}
+
+.help-card-list strong {
+  color: var(--text-main, #0f172a);
+}
+
+.help-link {
+  color: var(--primary, #4f46e5);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.help-link:focus-visible {
+  outline: 2px solid var(--primary, #4f46e5);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.help-contact-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.help-contact-title {
+  font-size: 17px;
+  font-weight: 750;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 8px;
+}
+
+.help-contact-desc {
+  font-size: 14px;
+  color: var(--text-muted, #334155);
+  margin: 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .help-page {
+    padding: 16px;
+  }
+  .help-title {
+    font-size: 21px;
+  }
+  .help-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .help-card, .help-callout-banner, .help-contact-card {
+    padding: 18px;
+  }
+}

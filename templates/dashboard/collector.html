@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard/collector.css' %}">
+{% endblock %}
+
+{% block title %}Collector Dashboard | FiCol{% endblock %}
+
+{% block sidebar %}
+{% include "components/sidebar.html" %}
+{% endblock %}
+
+{% block navbar %}
+{% include "components/navbar.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="collector-dashboard max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+  <section class="panel" aria-label="Your assigned accounts">
+    <div class="panel-header">
+      <div>
+        <h1 class="panel-title">You have {{ assigned_total|default:0 }} assigned account{{ assigned_total|pluralize }}</h1>
+        <p class="panel-subtitle">Open My Accounts to see your assignments, record visits, and report payments.</p>
+      </div>
+      <a class="btn btn-primary" href="{% url 'assignments:my_accounts' %}">My Accounts</a>
+    </div>
+  </section>
+
+
+  <!-- ================================================================= -->
+  <!-- 2. APPROVAL, AVAILABILITY, AND LOCATION                           -->
+  <!-- ================================================================= -->
+  {% if collector_profile.approval_status != "approved" %}
+    <!-- RESTRICTION PANEL: Pending, Rejected, Suspended Collectors -->
+    <section class="panel approval-panel {% if collector_profile.approval_status == 'pending' %}approval-pending{% else %}approval-restricted{% endif %}" role="alert">
+      <div>
+        <div>
+          <div class="row-inline">
+            <h2 class="approval-title">
+              Account Status: {{ collector_profile.get_approval_status_display|default:collector_profile.approval_status|title }}
+            </h2>
+            <span class="badge {% if collector_profile.approval_status == 'pending' %}badge-amber{% else %}badge-rose{% endif %}">
+              {{ collector_profile.approval_status|upper }}
+            </span>
+          </div>
+          <p class="approval-description">
+            {% if collector_profile.approval_status == "pending" %}
+              Your collector application is pending review. You cannot enable availability or receive account offers until approved by an administrator. Contact your supervisor for instructions.
+            {% elif collector_profile.approval_status == "suspended" %}
+              Your field collector access has been suspended. Offer dispatching and availability controls are disabled. Contact your supervisor.
+            {% elif collector_profile.approval_status == "rejected" %}
+              Your application was not approved. Access to field assignments is restricted. Contact your supervisor.
+            {% else %}
+              Account status requires administrative review. Availability and offer matching are disabled. Contact your supervisor.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </section>
+  {% else %}
+    <!-- APPROVED COLLECTOR: AVAILABILITY & HONEST GPS LOCATION PANEL -->
+    <section class="panel">
+      <div class="availability-row">
+
+        <!-- Online, Busy, Offline Status Display -->
+        <div class="toggle-wrap">
+          <div class="switch-ui {% if collector_profile.availability == 'online' %}is-online{% elif collector_profile.availability == 'busy' %}is-busy{% endif %}" 
+               title="Availability toggle: Coming soon"
+               aria-hidden="true">
+            <div class="switch-handle"></div>
+          </div>
+
+          <div>
+            <div class="row-inline">
+              <span class="status-heading">
+                {% if collector_profile.availability == 'online' %}Online &bull; Available for Offers
+                {% elif collector_profile.availability == 'busy' %}Busy &bull; Engaged on Assignment
+                {% else %}Offline{% endif %}
+              </span>
+              <span class="badge 
+                {% if collector_profile.availability == 'online' %}badge-emerald
+                {% elif collector_profile.availability == 'busy' %}badge-amber
+                {% else %}badge-subtle{% endif %}">
+                {{ collector_profile.availability|upper }}
+              </span>
+            </div>
+            <p class="helper-text">
+              Going offline pauses new offers; existing assigned accounts remain active. 
+              <span class="helper-note">(Availability toggle coming soon)</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Manual location detection and confirmed server submission -->
+        <div id="gps-telemetry" class="telemetry-box"
+             data-gps-submit-url="{% url 'assignments:submit_location' %}">
+          <div hidden>{% csrf_token %}</div>
+          <div class="telemetry-meta">
+            <div role="status" aria-live="polite" aria-atomic="true">
+              <div class="text-strong">
+                Location: <span id="gps-status-text" class="location-status">Not detected yet</span>
+              </div>
+              <div id="gps-meta-text" class="location-meta">
+                Select Detect Location to detect and save your location.
+              </div>
+              <div id="gps-freshness-text" class="location-meta"></div>
+            </div>
+          </div>
+
+          <button type="button" 
+                  id="gps-action-btn" 
+                  class="btn btn-sm btn-secondary">
+            Detect Location
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Explicit Offer Eligibility Rule Notice -->
+      <div class="notice-box">
+        <strong>Offer Eligibility Rule:</strong> Being online does not guarantee receiving offers. Dispatches require approved status, fewer than 10 account acceptances in the last 24 hours, and a location fix within {{ collector_profile.matching_radius_m }}m.
+      </div>
+    </section>
+  {% endif %}
+
+
+  <!-- ================================================================= -->
+  <!-- 3. NEARBY ACCOUNT OFFERS                                          -->
+  <!-- ================================================================= -->
+  {% if collector_profile.approval_status == "approved" %}
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">
+            <span>Nearby Account Offers</span>
+            {% if offers_connected %}
+              <span class="badge badge-primary">
+                {{ nearby_offers|length }} Available
+              </span>
+            {% endif %}
+          </div>
+          <p class="panel-subtitle">
+            Approximate perimeter matches. Acceptance grants exclusive ownership until resolved or released.
+          </p>
+        </div>
+      </div>
+
+      {% if not offers_connected %}
+        <!-- Feature Not Connected State -->
+        <div class="empty-callout">
+          <div class="empty-callout-title">Nearby account matching is not available yet</div>
+          <p class="empty-callout-text">
+            Offers near your current location will appear here when matching becomes available.
+          </p>
+        </div>
+      {% elif offers_error %}
+        <!-- Error State -->
+        <div class="panel error-panel">
+          Failed to load nearby offers: {{ offers_error }}
+        </div>
+      {% elif offers_loading %}
+        <!-- Loading State -->
+        <div class="empty-callout">
+          <div class="empty-callout-title">Loading matching account offers...</div>
+        </div>
+      {% else %}
+        <!-- Populated Offers Grid -->
+        <div class="offers-grid">
+          {% for offer in nearby_offers %}
+            <div class="offer-card">
+              <div>
+                <div class="offer-header">
+                  <span class="offer-ref">{{ offer.account_reference }}</span>
+                  <span class="badge badge-rose">
+                    {{ offer.expiry_display|default:"Expiring soon" }}
+                  </span>
+                </div>
+
+                <div class="offer-area">{{ offer.general_area }}</div>
+                <div class="offer-dist">
+                  Approx. Distance: <strong class="text-main">{{ offer.approximate_distance_display }}</strong>
+                  <span class="distance-note">(Straight-line distance; not driving distance)</span>
+                </div>
+
+                <div class="offer-terms-box">
+                  <div class="terms-row">
+                    <span class="terms-label">Task Summary:</span>
+                    <span class="terms-value">{{ offer.task_summary }}</span>
+                  </div>
+                  <div class="terms-row terms-divider">
+                    <span class="terms-label">Commission Terms:</span>
+                    <span class="terms-commission">{{ offer.commission_terms_display }}</span>
+                  </div>
+                </div>
+
+                <p class="privacy-notice">
+                  Customer contact numbers and exact street addresses are protected until accepted.
+                </p>
+              </div>
+
+              <!-- Offer Actions (Disabled pending backend routes) -->
+              <div class="offer-actions">
+                <button type="button" 
+                        disabled 
+                        class="btn btn-sm btn-secondary"
+                        title="Coming soon">
+                  View
+                </button>
+
+                <div class="action-group">
+                  <button type="button" 
+                          disabled 
+                          class="btn btn-sm btn-decline"
+                          title="Coming soon">
+                    Decline
+                  </button>
+
+                  <button type="button" 
+                          disabled 
+                          class="btn btn-sm btn-primary"
+                          title="Coming soon">
+                    Accept
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <!-- Genuine Empty State -->
+            <div class="empty-callout grid-full">
+              <div class="empty-callout-title">No offers currently available</div>
+              <p class="empty-callout-text">
+                No accounts match your current perimeter (radius: {{ collector_profile.matching_radius_m }}m). When new accounts are routed, they will appear here.
+              </p>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+
+  <!-- ================================================================= -->
+  <!-- 4. MY ASSIGNED ACCOUNTS                                           -->
+  <!-- ================================================================= -->
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <span>My Assigned Accounts</span>
+          <span class="badge 
+            {% if daily_acceptance.remaining == 0 %}badge-amber{% else %}badge-emerald{% endif %}">
+            Active accounts: {{ assigned_total|default:0 }} · Accepted in last 24 hours: {{ daily_acceptance.used }}/{{ daily_acceptance.limit }}
+          </span>
+        </div>
+        <p class="panel-subtitle">
+          Your next five active assignments. Deadlines are in Philippine time.
+        </p>
+      </div>
+      <a class="btn btn-sm btn-secondary" href="{% url 'assignments:my_accounts' %}">View all accounts</a>
+    </div>
+
+    {% if not assigned_accounts_connected %}
+      <div class="empty-callout">
+        <div class="empty-callout-title">Assigned accounts are not available yet</div>
+        <p class="empty-callout-text">Your assigned accounts and visit schedules will appear here when available.</p>
+      </div>
+    {% else %}
+      <!-- Desktop Table View -->
+      <div class="table-wrap desktop-table-view">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Account Ref</th>
+              <th>Customer Name</th>
+              <th>Territory</th>
+              <th>Balance</th>
+              <th>Next Action Deadline</th>
+              <th class="align-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for account in assigned_accounts %}
+              <tr>
+                <td class="offer-ref">{{ account.reference_number }}</td>
+                <td class="cell-primary">{{ account.customer_name }}</td>
+                <td>{{ account.area }}</td>
+                <td class="cell-primary">{{ account.balance_display }}</td>
+                <td>
+                  {% if account.is_overdue %}
+                    <span class="badge badge-rose text-bold">
+                      OVERDUE &bull; {{ account.next_deadline_display }}
+                    </span>
+                  {% else %}
+                    <span class="deadline-normal">{{ account.next_deadline_display }}</span>
+                  {% endif %}
+                </td>
+                <td class="align-right">
+                  <a href="{{ account.url }}" class="btn btn-sm btn-primary">Open account</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="table-empty">
+                  No accounts currently assigned. Accept nearby offers above to build your workload.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards View -->
+      <div class="mobile-cards-list mobile-cards-view">
+        {% for account in assigned_accounts %}
+          <div class="account-card">
+            <div class="acc-header">
+              <div>
+                <span class="offer-ref">{{ account.reference_number }}</span>
+                <div class="panel-title">{{ account.customer_name }}</div>
+                <div class="text-muted">{{ account.area }}</div>
+              </div>
+              <div class="align-right">
+                <div class="text-small">Balance</div>
+                <div class="panel-title">{{ account.balance_display }}</div>
+              </div>
+            </div>
+
+            <div class="acc-footer">
+              <div>
+                <div class="text-small">Deadline:</div>
+                {% if account.is_overdue %}
+                  <span class="badge badge-rose">OVERDUE &bull; {{ account.next_deadline_display }}</span>
+                {% else %}
+                  <span class="deadline-emphasis">{{ account.next_deadline_display }}</span>
+                {% endif %}
+              </div>
+              <div class="action-group-tight">
+                <a href="{{ account.url }}" class="btn btn-sm btn-primary">Open account</a>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="empty-callout">
+            <div class="empty-callout-title">No accounts currently assigned</div>
+            <p class="empty-callout-text">Accept nearby offers above to build your workload.</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+
+  <!-- ================================================================= -->
+  <!-- 5. FOLLOW-UPS                                                     -->
+  <!-- ================================================================= -->
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <span>Scheduled Follow-Ups</span>
+          {% if follow_ups_connected %}
+            <span class="badge badge-subtle">{{ follow_ups_total }} Tasks</span>
+          {% endif %}
+        </div>
+        <p class="panel-subtitle">
+          Scheduled visits, phone calls, and promise checks. Times are in Philippine time.
+        </p>
+      </div>
+    </div>
+
+    {% if not follow_ups_connected %}
+      <div class="empty-callout">
+        <div class="empty-callout-title">Follow-ups are not available yet</div>
+        <p class="empty-callout-text">Scheduled visits, calls, and promises-to-pay will be listed here.</p>
+      </div>
+    {% else %}
+      <div class="followup-list">
+        {% for item in follow_ups %}
+          <div class="followup-item {% if item.is_overdue %}is-overdue{% endif %}">
+            <div>
+               <div class="row-inline">
+                <span class="task-title">
+                  {{ item.next_action }}
+                </span>
+                <span class="offer-ref">{{ item.account_reference }}</span>
+                {% if item.is_overdue %}
+                  <span class="badge badge-rose">OVERDUE</span>
+                {% endif %}
+              </div>
+              <p class="task-meta">
+                Due: <strong class="task-due">{{ item.due_datetime_display }}</strong>
+              </p>
+            </div>
+            <a class="btn btn-sm btn-secondary" href="{{ item.account_url }}">Open account</a>
+          </div>
+        {% empty %}
+          <div class="empty-callout">
+            <div class="empty-callout-title">No pending follow-ups</div>
+            <p class="empty-callout-text">Follow-up field visits, calls, or PTP checks will appear here when scheduled.</p>
+          </div>
+        {% endfor %}
+      </div>
+      <a class="btn btn-sm btn-secondary" href="{% url 'activities:followups' %}">View all follow-ups</a>
+    {% endif %}
+  </section>
+
+
+  <!-- ================================================================= -->
+  <!-- 6. COMMISSIONS                                                    -->
+  <!-- ================================================================= -->
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Commissions Summary</div>
+        <p class="panel-subtitle">
+          Amounts are separated by stage to avoid double-counting.
+        </p>
+      </div>
+      <span class="reporting-period">
+        Reporting Period: <strong class="text-main">{{ earnings_period_label|default:"Not specified" }}</strong>
+      </span>
+    </div>
+
+    {% if not earnings_connected %}
+      <div class="empty-callout">
+        <div class="empty-callout-title">Commissions are not available yet</div>
+        <p class="empty-callout-text">Approved and paid commission summaries will appear here once calculated.</p>
+      </div>
+    {% else %}
+      <div class="commissions-grid">
+        <!-- Awaiting Approval -->
+        <div class="comm-card">
+          <div class="comm-card-title">
+            <span>Awaiting Approval</span>
+            <span class="badge badge-amber">Under Audit</span>
+          </div>
+          <div class="comm-amount">
+            {% if earnings.awaiting_approval is not None %}₱{{ earnings.awaiting_approval }}{% else %}<span class="amount-unavailable">Not calculated</span>{% endif %}
+          </div>
+          <p class="comm-desc">Calculated commissions undergoing supervisor review.</p>
+        </div>
+
+        <!-- Approved but Unpaid -->
+        <div class="comm-card is-approved">
+          <div class="comm-card-title">
+            <span class="commission-approved-label">Approved (Unpaid)</span>
+            <span class="badge badge-emerald">Verified</span>
+          </div>
+          <div class="comm-amount">
+            {% if earnings.approved_unpaid is not None %}₱{{ earnings.approved_unpaid }}{% else %}<span class="amount-unavailable">Not calculated</span>{% endif %}
+          </div>
+          <p class="comm-desc">Supervisor-approved earnings awaiting disbursement.</p>
+        </div>
+
+        <!-- Paid Out -->
+        <div class="comm-card">
+          <div class="comm-card-title">
+            <span>Paid</span>
+            <span class="badge badge-subtle">Disbursed</span>
+          </div>
+          <div class="comm-amount">
+            {% if earnings.paid_out is not None %}₱{{ earnings.paid_out }}{% else %}<span class="amount-unavailable">Not calculated</span>{% endif %}
+          </div>
+          <p class="comm-desc">Disbursed commissions for this reporting period.</p>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+
+  <!-- ================================================================= -->
+  <!-- 7. VERIFIED POINTS                                                -->
+  <!-- ================================================================= -->
+  <section class="panel">
+    <div class="panel-header points-header">
+      <div>
+        <div class="panel-title">Verified Activity Points</div>
+        <p class="panel-subtitle">
+          Points awarded only upon Back Office approval of submitted information proposals.
+        </p>
+      </div>
+      {% if performance_connected %}
+      <a class="btn btn-sm btn-secondary" href="{% url 'collector_performance' %}">View Performance</a>
+      {% endif %}
+    </div>
+
+    {% if not performance_connected %}
+      <div class="empty-callout">
+        <div class="empty-callout-title">Performance metrics are not available yet</div>
+      </div>
+    {% elif verified_points is not None %}
+      <div class="points-summary">
+        <div>
+          <span class="points-label">Verified Points</span>
+          <div class="points-value">
+            {{ verified_points }} <span class="points-unit">pts</span>
+          </div>
+        </div>
+        <div class="points-status">
+          Verification Status: <strong class="text-success">Current</strong>
+        </div>
+      </div>
+    {% else %}
+      <div class="empty-callout">
+        <div class="empty-callout-title">Verified points are not available yet</div>
+      </div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>
+<script src="{% static 'js/dashboard/collector.js' %}" defer></script>
+{% endblock %}

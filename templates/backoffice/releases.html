@@ -1,0 +1,140 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<p class="bo-description">Review collector assignment release requests for your authorized clients. Approved requests release the collector from the account and cancel outstanding follow-ups.</p>
+
+<nav class="bo-release-filters" aria-label="Release request status filters">
+  <a href="?state=pending&amp;q={{ search_query|urlencode }}" {% if release_state == 'pending' %}aria-current="page"{% endif %} class="bo-release-filter-btn {% if release_state == 'pending' %}is-active{% endif %}">
+    <span>Pending review</span>
+    <span class="bo-release-filter-count">{{ release_counts.pending }}</span>
+  </a>
+  <a href="?state=approved&amp;q={{ search_query|urlencode }}" {% if release_state == 'approved' %}aria-current="page"{% endif %} class="bo-release-filter-btn {% if release_state == 'approved' %}is-active{% endif %}">
+    <span>Approved</span>
+    <span class="bo-release-filter-count">{{ release_counts.approved }}</span>
+  </a>
+  <a href="?state=rejected&amp;q={{ search_query|urlencode }}" {% if release_state == 'rejected' %}aria-current="page"{% endif %} class="bo-release-filter-btn {% if release_state == 'rejected' %}is-active{% endif %}">
+    <span>Rejected</span>
+    <span class="bo-release-filter-count">{{ release_counts.rejected }}</span>
+  </a>
+  <a href="?state=superseded&amp;q={{ search_query|urlencode }}" {% if release_state == 'superseded' %}aria-current="page"{% endif %} class="bo-release-filter-btn {% if release_state == 'superseded' %}is-active{% endif %}">
+    <span>Superseded</span>
+    <span class="bo-release-filter-count">{{ release_counts.superseded }}</span>
+  </a>
+</nav>
+
+<form method="get" role="search" class="bo-release-search">
+  <input type="hidden" name="state" value="{{ release_state }}">
+  <label class="bo-release-search-label" for="release-search">Find a release request</label>
+  <div class="bo-release-search-bar">
+    <input id="release-search" name="q" type="search" maxlength="100" value="{{ search_query }}" placeholder="Account, customer, collector or reason" class="bo-release-search-input">
+    <button type="submit" class="bo-release-search-btn">Search</button>
+    {% if search_query %}
+    <a href="?state={{ release_state }}" class="bo-release-search-clear">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<p class="bo-release-meta-summary">{{ page_obj.paginator.count }} matching request{{ page_obj.paginator.count|pluralize }} · Philippine time</p>
+
+<div class="bo-release-list">
+  {% for req in release_requests %}
+  <article class="bo-release-card">
+    <div class="bo-release-card-header">
+      <div>
+        <h2 class="bo-release-card-title">{{ req.assignment.account.reference }}</h2>
+        <p class="bo-release-card-subtitle">{{ req.assignment.account.customer.display_name }} · {{ req.assignment.account.client.name }}</p>
+      </div>
+      <div>
+        <span class="bo-status-badge {% if req.status == 'approved' %}is-approved{% elif req.status == 'rejected' %}is-rejected{% elif req.status == 'superseded' %}is-superseded{% else %}is-pending{% endif %}">
+          {{ req.get_status_display }}
+        </span>
+      </div>
+    </div>
+
+    <dl class="bo-release-grid">
+      <div class="bo-release-col">
+        <dt class="bo-release-field-label">Collector</dt>
+        <dd class="bo-release-field-val is-bold">{{ req.requested_by.get_full_name|default:req.requested_by.username }}</dd>
+      </div>
+      <div class="bo-release-col">
+        <dt class="bo-release-field-label">Requested date</dt>
+        <dd class="bo-release-field-val">{{ req.created_at|date:"d M Y, g:i A" }}</dd>
+      </div>
+      <div class="bo-release-col">
+        <dt class="bo-release-field-label">Assignment status</dt>
+        <dd class="bo-release-field-val is-bold">{{ req.assignment.get_status_display }}</dd>
+      </div>
+      <div class="bo-release-col">
+        <dt class="bo-release-field-label">Ongoing visit check</dt>
+        <dd class="bo-release-field-val">
+          {% if req.has_ongoing_visit %}
+          <span class="bo-ongoing-pill is-active-visit">Visit in progress</span>
+          {% else %}
+          <span class="bo-ongoing-pill is-clear">No visit in progress</span>
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+
+    <div class="bo-release-box">
+      <h3 class="bo-release-box-label">Collector explanation</h3>
+      <p class="bo-release-box-content">{{ req.reason }}</p>
+    </div>
+
+    {% if req.status != 'requested' %}
+    <div class="bo-release-box">
+      <h3 class="bo-release-box-label">Review record</h3>
+      <p class="bo-release-box-content">{% if req.status == 'superseded' %}Superseded by{% else %}Decided by{% endif %} <strong>{{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }}</strong> on {{ req.reviewed_at|date:"d M Y, g:i A" }}</p>
+      {% if req.review_reason %}
+      <p class="bo-release-box-content"><strong>Note:</strong> {{ req.review_reason }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if req.status == 'requested' %}
+    <form method="post" action="{% url 'decide_release_request' req.pk %}?state={{ release_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.number }}" class="bo-release-decision-form">
+      {% csrf_token %}
+      <label for="release-reason-{{ req.pk }}" class="bo-decision-label">Review note — required when rejecting release</label>
+      <textarea id="release-reason-{{ req.pk }}" name="reason" maxlength="5000" rows="2" class="bo-decision-textarea" placeholder="Provide explanation for decision (mandatory if rejecting)">{% if review_error_id == req.pk %}{{ entered_reason }}{% endif %}</textarea>
+
+      {% if review_error_id == req.pk and review_error %}
+      <p class="bo-decision-error" role="alert">{{ review_error }}</p>
+      {% endif %}
+
+      {% if req.has_ongoing_visit %}
+      <p class="bo-decision-warning">Approval blocked: a visit is currently in progress on this assignment. The visit must be completed or cancelled before release can be approved.</p>
+      {% endif %}
+
+      <div class="bo-decision-actions">
+        <button name="decision" value="approve" type="submit" {% if req.has_ongoing_visit %}disabled title="Cannot approve release while a visit is in progress"{% endif %} class="bo-btn-approve">Approve release</button>
+        <button name="decision" value="reject" type="submit" class="bo-btn-reject">Reject release</button>
+      </div>
+    </form>
+    {% endif %}
+  </article>
+  {% empty %}
+  <div class="bo-release-empty">
+    <p>No release requests match this view.</p>
+  </div>
+  {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="bo-release-pagination" aria-label="Pagination">
+  {% if page_obj.has_previous %}
+  <a href="?state={{ release_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.previous_page_number }}" class="bo-pagination-btn">Previous</a>
+  {% else %}
+  <span class="bo-pagination-disabled">Previous</span>
+  {% endif %}
+
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+  {% if page_obj.has_next %}
+  <a href="?state={{ release_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.next_page_number }}" class="bo-pagination-btn">Next</a>
+  {% else %}
+  <span class="bo-pagination-disabled">Next</span>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% endtimezone %}{% endblock %}

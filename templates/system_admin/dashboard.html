@@ -1,0 +1,75 @@
+{% extends "system_admin/base.html" %}
+{% load static tz %}
+{% block title %}Admin dashboard | FiCol{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">{% endblock %}
+{% block admin_content %}
+{% timezone "Asia/Singapore" %}
+<div class="sa-container admin-dashboard">
+  <header class="dashboard-header">
+    <div><h2 class="sa-page-title">Admin dashboard</h2><p class="sa-page-desc">Last updated <time datetime="{{ updated_at|date:'c' }}">{{ updated_at|date:"M j, Y, g:i A" }}</time> SGT</p></div>
+    <form method="get" class="dashboard-range" aria-label="Dashboard date range">
+      {% for option in range_options %}<button class="dashboard-range-button{% if option.key == selected_range %} is-selected{% endif %}" type="submit" name="range" value="{{ option.key }}" {% if option.key == selected_range %}aria-pressed="true"{% else %}aria-pressed="false"{% endif %}>{{ option.label }}</button>{% endfor %}
+    </form>
+  </header>
+
+  {% if attention_total %}
+  <section class="dashboard-banner" aria-labelledby="attention-heading">
+    <div class="dashboard-banner-heading"><div><h3 id="attention-heading">{{ attention_total }} user{{ attention_total|pluralize }} awaiting activation</h3><p>Setup invitations expire after {{ invitation_expiry_hours }} hours. Users must verify their email and set a password.</p></div><a class="sa-link" href="{{ attention_url }}">View all &rarr;</a></div>
+    <ul class="dashboard-invitations">
+      {% for item in attention %}<li><span><strong>{{ item.name }}</strong><small>{{ item.email }}</small></span>
+        {% if item.resend_url %}<form method="post" action="{{ item.resend_url }}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="sa-btn sa-btn-sm sa-btn-secondary" type="submit">Resend invite</button></form>
+        {% else %}<a class="sa-btn sa-btn-sm sa-btn-secondary" href="{{ item.account_url }}">View account</a>{% endif %}
+      </li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="dashboard-kpis" aria-label="Key metrics">
+    <article class="dashboard-panel dashboard-hero">
+      <div class="dashboard-hero-heading"><h3>Collected</h3><span>{{ range_label }}</span></div>
+      <a class="dashboard-amount" href="{{ collection_url }}">{{ collected }}</a>
+      <p class="dashboard-muted">Verified payments only · By payment date</p>
+      <svg class="dashboard-sparkline" viewBox="0 0 240 64" role="img" aria-labelledby="sparkline-title"><title id="sparkline-title">Daily verified PHP collections — {{ range_label }}</title><line class="sparkline-baseline" x1="0" y1="54" x2="240" y2="54"/><polyline class="sparkline-line" points="{{ sparkline_points }}"/></svg>
+      {% if not has_payments %}<p class="dashboard-muted">No verified payments in this period.</p>{% endif %}
+      {% for amount in other_currencies %}<p class="dashboard-muted">Also collected: {{ amount }} (separate currency)</p>{% endfor %}
+    </article>
+    {% for card in cards %}
+    <a class="dashboard-panel dashboard-kpi" href="{{ card.url }}"><span class="dashboard-kpi-label">{{ card.label }}</span><strong>{{ card.value }}</strong><span class="dashboard-muted">{{ card.note }}</span><span class="dashboard-kpi-link">View details <span aria-hidden="true">→</span></span></a>
+    {% endfor %}
+  </section>
+
+  <div class="dashboard-columns">
+    <section class="dashboard-panel" aria-labelledby="pipeline-heading">
+      <div class="dashboard-section-heading"><h3 id="pipeline-heading">Account pipeline</h3><span class="dashboard-muted">{{ account_total }} total</span></div>
+      {% if pipeline %}
+      <svg class="dashboard-pipeline" viewBox="0 0 100 10" preserveAspectRatio="none" role="img" aria-labelledby="pipeline-title"><title id="pipeline-title">Account pipeline: {% for stage in pipeline %}{{ stage.label }} {{ stage.count }}{% if not forloop.last %}, {% endif %}{% endfor %}</title>{% for stage in pipeline %}<rect class="pipeline-{{ stage.key }}" x="{{ stage.x }}" y="0" width="{{ stage.width }}" height="10"/>{% endfor %}</svg>
+      <ul class="dashboard-legend">{% for stage in pipeline %}<li><span class="dashboard-dot pipeline-{{ stage.key }}" aria-hidden="true"></span><span>{{ stage.label }}</span><strong>{{ stage.count }}</strong></li>{% endfor %}</ul>
+      {% else %}<p class="dashboard-muted">No collection accounts yet.</p>{% endif %}
+      {% if zero_stages %}<p class="dashboard-zero">No accounts: {{ zero_stages }}.</p>{% endif %}
+      <p class="dashboard-caption">Each account appears once. Resolved accounts and open promises take priority over contact attempts, assignments, and offers.</p>
+    </section>
+
+    <section class="dashboard-panel" aria-labelledby="collectors-heading">
+      <h3 id="collectors-heading">Collectors summary</h3>
+      <div class="dashboard-collector-total"><strong>{{ collectors.approved }}</strong><span class="dashboard-muted">eligible collectors</span></div>
+      <p class="dashboard-muted">{{ collectors.active }} activated and active · {{ collectors.suspended }} currently suspended</p>
+      <h4 class="dashboard-summary-label">{{ range_label }}</h4>
+      <ul class="dashboard-summary-list"><li><span>New pending profiles</span><strong>{{ collectors.recent_pending }}</strong></li><li><span>Recently rejected</span><strong>{{ recent_collector_changes.rejected }}</strong></li><li><span>Recently suspended</span><strong>{{ recent_collector_changes.suspended }}</strong></li></ul>
+      <p class="dashboard-caption">New collectors need account setup, with no manual approval. Pending and rejected counts reflect legacy records.</p>
+    </section>
+  </div>
+
+  <section class="dashboard-panel" aria-labelledby="activity-heading">
+    <div class="dashboard-section-heading"><div><h3 id="activity-heading">Recent activity</h3><p class="dashboard-muted">{{ range_label }} · Repeated actions grouped within 30 minutes</p></div>{% if audit_url %}<a class="sa-link" href="{{ audit_url }}">Full audit log &rarr;</a>{% endif %}</div>
+    <ol class="dashboard-timeline">
+      {% for item in activity %}<li>
+        <span class="dashboard-event-icon event-{{ item.color }}" aria-hidden="true">{{ item.icon }}</span>
+        <div class="dashboard-event-body"><p>{{ item.sentence }}{% if item.count > 1 %} <span class="dashboard-repeat" aria-label="{{ item.count }} events">&times;{{ item.count }}</span>{% endif %}</p>
+          <small>{% if item.count == 1 %}{{ item.record }} · {% endif %}<time datetime="{{ item.start|date:'c' }}">{{ item.start|date:"M j, g:i A" }}</time>{% if item.count > 1 %} – <time datetime="{{ item.end|date:'c' }}">{{ item.end|date:"M j, g:i A" }}</time>{% endif %} SGT</small>
+        </div>
+      </li>{% empty %}<li><p class="dashboard-muted">No activity recorded in this period.</p></li>{% endfor %}
+    </ol>
+  </section>
+</div>
+{% endtimezone %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "backoffice/base.html" %}
+{% block backoffice_content %}
+<p class="bo-description">Your work queues for the clients you are authorized to handle.</p>
+<div class="bo-stats">
+  {% if can_review %}<a class="bo-stat" href="{% url 'backoffice_visits' %}"><span>Reports awaiting review</span><strong>{{ pending_reports }}</strong><span class="bo-stat-action">Open Visit Reviews</span></a>{% endif %}
+  {% if can_schedule %}<a class="bo-stat" href="{% url 'backoffice_followups' %}#scheduling-heading"><span>Follow-up requests</span><strong>{{ followup_request_count }}</strong><span class="bo-stat-action">Set visit schedules</span></a><a class="bo-stat" href="{% url 'backoffice_followups' %}#overdue-heading"><span>Overdue schedules</span><strong>{{ overdue_schedule_count }}</strong><span class="bo-stat-action">Review overdue work</span></a>{% endif %}
+  {% if can_verify_payments %}<a class="bo-stat" href="{% url 'backoffice_payments' %}"><span>Payments awaiting verification</span><strong>{{ pending_payments }}</strong><span class="bo-stat-action">Open Payment Verifications</span></a>{% endif %}
+  {% if can_review_commissions %}<a class="bo-stat" href="{% url 'backoffice_commissions' %}"><span>Commissions awaiting review</span><strong>{{ pending_commissions }}</strong><span class="bo-stat-action">Open Commissions</span></a>{% endif %}
+  {% if can_manage_payouts %}<a class="bo-stat" href="{% url 'backoffice_payouts' %}"><span>Draft payouts pending</span><strong>{{ draft_payouts }}</strong><span class="bo-stat-action">Open Payouts</span></a>{% endif %}
+</div>
+<section class="bo-card"><h2>Where to start</h2><p>Open a queue above to review reports or schedule the next customer visit.</p></section>
+{% endblock %}

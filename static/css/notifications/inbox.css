@@ -1,0 +1,391 @@
+/* ==========================================================================
+   FiCol In-App Notifications Inbox Styles
+   Light theme, white surfaces, subtle borders, readable text,
+   no decorative icons or dots, no gradients, >=44px touch targets.
+   ========================================================================== */
+
+.notifications-page {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
+}
+
+.inbox-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header with Title and Mark All Action */
+.inbox-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.inbox-header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inbox-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 750;
+  color: var(--text-main, #0f172a);
+  line-height: 1.25;
+}
+
+.inbox-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-subtle, #64748b);
+  line-height: 1.5;
+}
+
+.inbox-mark-all-form {
+  margin: 0;
+}
+
+/* Filter Navigation */
+.inbox-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  padding-bottom: 12px;
+}
+
+.inbox-filter-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #334155);
+  text-decoration: none;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-card, #ffffff);
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.inbox-filter-link:hover {
+  background: var(--bg-subtle, #f8fafc);
+  color: var(--text-main, #0f172a);
+}
+
+.inbox-filter-link.is-active {
+  background: var(--primary-light, #eef2ff);
+  color: var(--primary-text, #3730a3);
+  border-color: var(--primary-border, #c7d2fe);
+}
+
+/* Notifications List & Cards */
+.inbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inbox-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 12px;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.inbox-card.is-unread {
+  border-color: var(--border-strong, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+}
+
+.inbox-card.is-clickable {
+  cursor: pointer;
+}
+
+.inbox-card.is-clickable:hover {
+  background: var(--bg-subtle, #f8fafc);
+  border-color: var(--primary-border, #c7d2fe);
+}
+
+.inbox-card-open-form {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.inbox-card-open-overlay,
+.inbox-card-overlay {
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.inbox-card-open-overlay:focus-visible,
+.inbox-card-overlay:focus-visible {
+  outline: 2px solid var(--primary, #4f46e5);
+  outline-offset: 2px;
+}
+
+.inbox-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.inbox-card-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 12px;
+}
+
+.inbox-card-type {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary-text, #3730a3);
+  background: var(--primary-light, #eef2ff);
+  border: 1px solid var(--primary-border, #c7d2fe);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.inbox-card-state {
+  font-weight: 600;
+  color: var(--text-subtle, #64748b);
+}
+
+.inbox-card.is-unread .inbox-card-state {
+  color: var(--primary-text, #3730a3);
+  font-weight: 700;
+}
+
+.inbox-card-time {
+  color: var(--text-subtle, #64748b);
+}
+
+.inbox-card-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-main, #0f172a);
+  word-break: break-word;
+}
+
+/* Actions in Card */
+.inbox-card-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.inbox-card-open-action-form,
+.inbox-card-read-form,
+.inbox-card-unread-form {
+  margin: 0;
+}
+
+.inbox-offer-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  line-height: 1.35;
+}
+
+/* Generic Buttons and Links (>= 44px touch targets) */
+.inbox-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #334155);
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.inbox-button:hover {
+  background: var(--bg-subtle, #f8fafc);
+  color: var(--text-main, #0f172a);
+  border-color: var(--border-strong, #cbd5e1);
+}
+
+.inbox-action-link,
+.inbox-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--primary-text, #3730a3);
+  background: var(--primary-light, #eef2ff);
+  border: 1px solid var(--primary-border, #c7d2fe);
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.inbox-action-link:hover,
+.inbox-action-button:hover {
+  background: var(--primary-border, #c7d2fe);
+}
+
+/* Pagination */
+.inbox-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.inbox-page-status {
+  font-size: 13px;
+  color: var(--text-subtle, #64748b);
+}
+
+/* Empty State */
+.inbox-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 20px;
+  background: var(--bg-card, #ffffff);
+  border: 1px dashed var(--border-subtle, #e2e8f0);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.inbox-empty h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+.inbox-empty p {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--text-subtle, #64748b);
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+/* Responsive Layout (< 640px) */
+@media (max-width: 639px) {
+  .notifications-page {
+    padding: 16px 12px;
+  }
+
+  .inbox-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inbox-header .inbox-button {
+    width: 100%;
+  }
+
+  .inbox-filters {
+    overflow-x: auto;
+  }
+
+  .inbox-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 14px;
+  }
+
+  .inbox-card-actions {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle, #e2e8f0);
+    justify-content: flex-start;
+  }
+
+  .inbox-card-actions .inbox-button,
+  .inbox-card-actions .inbox-action-link,
+  .inbox-card-actions .inbox-action-button,
+  .inbox-card-actions .inbox-card-read-form,
+  .inbox-card-actions .inbox-card-unread-form,
+  .inbox-card-actions .inbox-card-open-action-form {
+    flex: 1 1 auto;
+  }
+
+  .inbox-card-actions .inbox-button,
+  .inbox-card-actions .inbox-action-button {
+    width: 100%;
+  }
+
+  .inbox-pagination {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .inbox-pagination .inbox-button {
+    width: 100%;
+  }
+}

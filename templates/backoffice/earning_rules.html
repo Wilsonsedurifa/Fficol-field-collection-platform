@@ -1,0 +1,132 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<p class="bo-description">Manage client-specific remuneration rates for validated customer information. Publishing a new rate version retires the preceding active version without editing historical commission records.</p>
+
+<!-- Publish Rate Form Card -->
+<section class="mb-8 rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm" aria-labelledby="publish-rate-heading">
+  <h2 id="publish-rate-heading" class="text-lg font-bold text-slate-900">Publish New Earning Rate</h2>
+  <p class="mt-1 text-sm text-slate-600">Set a fixed PHP amount awarded when Back Office validates customer information for an account.</p>
+
+  {% if form_error %}
+  <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800" role="alert">
+    {{ form_error }}
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'backoffice_earning_rules' %}" class="mt-5 grid gap-4 sm:grid-cols-2 md:grid-cols-4 items-end">
+    {% csrf_token %}
+    <div>
+      <label for="id_client" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">Client</label>
+      <select id="id_client" name="client_id" required class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        <option value="">Select client...</option>
+        {% for c in clients %}
+        <option value="{{ c.pk }}" {% if selected_client == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="id_category" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">Information Category</label>
+      <select id="id_category" name="category" required class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        <option value="">Select category...</option>
+        {% for code, label in categories %}
+        <option value="{{ code }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="id_amount" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">Fixed Rate (PHP)</label>
+      <input id="id_amount" name="amount" type="number" step="0.01" min="0.01" required placeholder="150.00" class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+    </div>
+
+    <div>
+      <button type="submit" class="min-h-11 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        Publish Rate
+      </button>
+    </div>
+  </form>
+</section>
+
+<!-- Filter by Client -->
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <form method="get" class="flex flex-wrap items-center gap-2">
+    <label for="filter-client" class="text-sm font-semibold text-slate-700">Filter by client:</label>
+    <select id="filter-client" name="client" onchange="this.form.submit()" class="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+      <option value="">All authorized clients</option>
+      {% for c in clients %}
+      <option value="{{ c.pk }}" {% if selected_client == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+      {% endfor %}
+    </select>
+    {% if selected_client %}
+    <a href="{% url 'backoffice_earning_rules' %}" class="min-h-11 inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">Clear</a>
+    {% endif %}
+  </form>
+  <p class="text-sm text-slate-600">{{ page_obj.paginator.count }} rate record{{ page_obj.paginator.count|pluralize }}</p>
+</div>
+
+<!-- Earning Rates Table -->
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="w-full text-left text-sm text-slate-700">
+    <thead class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Client</th>
+        <th scope="col" class="px-4 py-3">Category</th>
+        <th scope="col" class="px-4 py-3">Version</th>
+        <th scope="col" class="px-4 py-3">Rate (PHP)</th>
+        <th scope="col" class="px-4 py-3">Status</th>
+        <th scope="col" class="px-4 py-3">Published By</th>
+        <th scope="col" class="px-4 py-3">Published At</th>
+        <th scope="col" class="px-4 py-3">Retirement</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-200">
+      {% for r in rules %}
+      <tr class="hover:bg-slate-50">
+        <td class="px-4 py-3 font-semibold text-slate-900">{{ r.client.name }} <span class="text-xs text-slate-400">({{ r.client.code }})</span></td>
+        <td class="px-4 py-3">{{ r.get_category_display }}</td>
+        <td class="px-4 py-3 font-mono">v{{ r.version }}</td>
+        <td class="px-4 py-3 font-bold text-slate-900">₱{{ r.amount|floatformat:2 }}</td>
+        <td class="px-4 py-3">
+          {% if r.is_active %}
+          <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Active</span>
+          {% else %}
+          <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">Retired</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3 text-slate-600">{{ r.created_by.get_full_name|default:r.created_by.username|default:"System" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ r.created_at|date:"d M Y, g:i A" }}</td>
+        <td class="px-4 py-3 text-xs text-slate-500">
+          {% if r.retired_at %}
+          Superseded {{ r.retired_at|date:"d M Y, g:i A" }} by {{ r.retired_by.username|default:"System" }}
+          {% else %}
+          &mdash;
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" class="px-4 py-8 text-center text-slate-500">
+          No earning rates configured. Select a client above to publish the first rate version.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav class="mt-6 flex justify-center gap-2" aria-label="Earning rates pagination">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}&amp;client={{ selected_client }}" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">Previous</a>
+  {% endif %}
+  <span class="inline-flex items-center px-3 py-2 text-sm text-slate-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}&amp;client={{ selected_client }}" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">Next</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% endtimezone %}{% endblock %}

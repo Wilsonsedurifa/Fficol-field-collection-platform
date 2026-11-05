@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static tz %}
+{% block title %}Follow-ups | FiCol{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/collector/followup.css' %}">
+{% endblock %}
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Follow-ups" %}{% endblock %}
+{% block content %}{% timezone "Asia/Manila" %}
+<main class="followup-page" aria-label="Your scheduled follow-ups">
+  <div class="followup-heading"><div><h2>Your next actions</h2><p>View the schedules Back Office has set for your assigned accounts.</p></div><a class="followup-button" href="{% url 'assignments:my_accounts' %}">My Accounts</a></div>
+  <nav class="followup-filters" aria-label="Filter by due time">
+    <a class="followup-filter {% if period == 'all' %}is-active{% endif %}" href="?period=all&amp;q={{ search_query|urlencode }}" {% if period == 'all' %}aria-current="true"{% endif %}><span>All pending</span><strong>{{ counts.total }}</strong></a>
+    <a class="followup-filter {% if period == 'overdue' %}is-active{% endif %}" href="?period=overdue&amp;q={{ search_query|urlencode }}" {% if period == 'overdue' %}aria-current="true"{% endif %}><span>Overdue</span><strong>{{ counts.overdue }}</strong></a>
+    <a class="followup-filter {% if period == 'today' %}is-active{% endif %}" href="?period=today&amp;q={{ search_query|urlencode }}" {% if period == 'today' %}aria-current="true"{% endif %}><span>Today</span><strong>{{ counts.today }}</strong></a>
+    <a class="followup-filter {% if period == 'upcoming' %}is-active{% endif %}" href="?period=upcoming&amp;q={{ search_query|urlencode }}" {% if period == 'upcoming' %}aria-current="true"{% endif %}><span>Upcoming</span><strong>{{ counts.upcoming }}</strong></a>
+  </nav>
+  <p class="followup-hint">Overdue includes tasks whose due time has passed. Today shows the rest of today; upcoming starts tomorrow. All times are Philippine time. Counts cover all your pending tasks.</p>
+  <form class="followup-search" method="get" role="search"><input type="hidden" name="period" value="{{ period }}"><label for="followup-search">Find a follow-up</label><div class="followup-search-controls"><input id="followup-search" name="q" type="search" maxlength="100" value="{{ search_query }}" placeholder="Account reference, customer or address"><button class="followup-button primary" type="submit">Search</button>{% if search_query %}<a class="followup-button" href="?period={{ period }}">Clear search</a>{% endif %}</div></form>
+  <p class="followup-result-count">{{ page_obj.paginator.count }} matching task{{ page_obj.paginator.count|pluralize }}{% if search_query %} for “{{ search_query }}”{% endif %} · Earliest due first</p>
+  <div class="followup-grid">
+    {% for task in tasks %}
+    <article class="followup-card {% if task.schedule_period == 'overdue' %}is-overdue{% endif %}">
+      <div class="followup-card-heading"><h3>{{ task.get_kind_display }}</h3><span class="followup-status {{ task.schedule_period }}">{% if task.schedule_period == 'overdue' %}Overdue{% elif task.schedule_period == 'today' %}Today{% else %}Upcoming{% endif %}</span></div>
+      <p class="followup-reference">{{ task.account.reference }}</p><p class="followup-customer">{{ task.account.customer.display_name }}</p><p class="followup-client">{{ task.account.client.name }}</p>
+      <dl>{% if task.available_from %}<dt>Available from</dt><dd>{{ task.available_from|date:"d M Y, g:i A" }}</dd><dt>Complete by</dt>{% else %}<dt>Earlier schedule</dt>{% endif %}<dd>{{ task.due_at|date:"d M Y, g:i A" }}</dd></dl>{% if task.decision_note %}<p>{{ task.decision_note }}</p>{% endif %}
+      <a class="followup-button primary" href="{% url 'assignments:account_detail' task.assignment_id %}" aria-label="Open account {{ task.account.reference }} for {{ task.get_kind_display|lower }}">Open account</a>
+    </article>
+    {% empty %}
+    <section class="followup-empty">{% if counts.total == 0 %}<h3>No pending follow-ups</h3><p>You can request another visit from the assigned account. Back Office sets its schedule.</p><a class="followup-button primary" href="{% url 'assignments:my_accounts' %}">Open My Accounts</a>{% else %}<h3>No matching follow-ups</h3><p>Try a different search or due-time filter.</p><a class="followup-button" href="{% url 'activities:followups' %}">Show all pending tasks</a>{% endif %}</section>
+    {% endfor %}
+  </div>
+  {% if page_obj.has_other_pages %}<nav class="followup-pagination" aria-label="Follow-up pages">{% if page_obj.has_previous %}<a class="followup-button" href="?period={{ period }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}<span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="followup-button" href="?period={{ period }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
+  <section class="followup-card"><h3>Recent requests</h3><p>Latest 20 requests awaiting scheduling or rejected by Back Office.</p>{% for task in followup_requests %}<article><h4>{{ task.account.reference }} · {{ task.get_status_display }}</h4><p>Suggested date {{ task.due_at|date:"d M Y, g:i A" }}</p>{% if task.decision_note %}<p>{{ task.decision_note }}</p>{% endif %}<a class="followup-button" href="{% url 'assignments:account_detail' task.assignment_id %}">Open account</a></article>{% empty %}<p>No recent requests.</p>{% endfor %}</section>
+  <p class="followup-hint">Opening an account does not complete the task or change its due time.</p>
+</main>
+{% endtimezone %}{% endblock %}
+{% block extra_js %}<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>{% endblock %}

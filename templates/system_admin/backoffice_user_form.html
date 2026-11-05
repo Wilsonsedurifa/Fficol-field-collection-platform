@@ -1,0 +1,162 @@
+{% extends "system_admin/base.html" %}
+{% load static %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/system_admin/backoffice_user_form.css' %}">{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/system_admin/backoffice_user_form.js' %}" defer></script>{% endblock %}
+
+{% block title %}
+  {% if is_create %}Add Back Office User{% elif is_superuser_account %}System Account (Read-Only){% else %}Edit Back Office User: {{ target_user.username }}{% endif %} | FiCol System Admin
+{% endblock %}
+
+{% block admin_content %}
+<div class="sa-container sa-container-narrow bo-user-page">
+  <div class="sa-page-header">
+    <div>
+      <h2 class="sa-page-title">
+        {% if is_create %}
+          Add Back Office User
+        {% elif is_superuser_account %}
+          System Account: {{ target_user.username }}
+        {% else %}
+          Edit Back Office User: {{ target_user.username }}
+        {% endif %}
+      </h2>
+      <p class="sa-page-desc">
+        {% if is_create %}
+          Create an account and select the Back Office menus this user can access.
+        {% elif is_superuser_account %}
+          Superusers are protected read-only system accounts.
+        {% else %}
+          Manage Back Office modules, client scope, and account access.
+        {% endif %}
+      </p>
+    </div>
+    <div class="sa-page-actions">
+      <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-secondary">&larr; Back to Users</a>
+    </div>
+  </div>
+
+  {% if is_superuser_account %}
+    <div class="sa-card">
+      <div class="sa-alert sa-alert-info">
+        <strong>Protected System Account</strong>
+        <p>This account is an active superuser (<code>is_superuser=True</code>). In accordance with FiCol security policies, superuser accounts cannot be edited, deactivated, password-reset, or modified from the System Admin portal.</p>
+      </div>
+      <div class="sa-details-grid">
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Username</span>
+          <span class="sa-detail-value">{{ target_user.username }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Full Name</span>
+          <span class="sa-detail-value">{{ target_user.get_full_name|default:"—" }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Email</span>
+          <span class="sa-detail-value">{{ target_user.email|default:"—" }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Account Status</span>
+          <span class="sa-detail-value">
+            {% if target_user.is_active %}<span class="sa-badge sa-badge-success">Active</span>{% else %}<span class="sa-badge sa-badge-danger">Inactive</span>{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+  {% elif is_create %}
+    <div class="sa-card">
+      <form method="post" action="{% url 'system_admin_backoffice_user_create' %}" class="sa-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="sa-alert sa-alert-danger" role="alert">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <fieldset class="sa-fieldset">
+          <legend class="sa-legend">User details</legend>
+          <div class="bo-user-fields">
+            {% include "system_admin/components/backoffice_field.html" with field=form.username %}
+            {% include "system_admin/components/backoffice_field.html" with field=form.email %}
+            {% include "system_admin/components/backoffice_field.html" with field=form.first_name %}
+            {% include "system_admin/components/backoffice_field.html" with field=form.last_name %}
+          </div>
+        </fieldset>
+
+        <p class="sa-help-text">A one-time setup link will be emailed to this address. The user verifies their email and sets their own password. The link expires in 72 hours.</p>
+
+        {% include "system_admin/components/module_permissions.html" %}
+
+        {% include "system_admin/components/client_access_cards.html" %}
+
+        <div class="sa-alert sa-alert-info">
+          <strong>No Collector Profile:</strong> Back Office accounts do not receive a Collector Profile. Roles are mutually exclusive.
+        </div>
+
+        <div class="sa-form-actions bo-user-footer">
+          <button type="submit" class="sa-btn sa-btn-primary">Create Back Office User</button>
+          <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <div class="sa-card">
+      <div class="sa-details-grid bo-user-summary">
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Username</span>
+          <span class="sa-detail-value">{{ target_user.username }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Full Name</span>
+          <span class="sa-detail-value">{{ target_user.get_full_name|default:"—" }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Current Role</span>
+          <span class="sa-detail-value">{{ role_info.role }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Portal Destination</span>
+          <span class="sa-detail-value">{{ role_info.portal }}</span>
+        </div>
+      </div>
+
+      {% if role_info.is_collector %}
+        <div class="sa-alert sa-alert-warning">
+          <strong>Historical Collector Record:</strong> This user has a historical collector profile with status <code>{{ role_info.collector_status }}</code>. The profile is inactive, preserving historical logs and assignments.
+        </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'system_admin_backoffice_user_edit' target_user.pk %}" class="sa-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="sa-alert sa-alert-danger" role="alert">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <fieldset class="sa-fieldset">
+          <legend class="sa-legend">Account Status</legend>
+          <div class="sa-form-group sa-checkbox-group">
+            <label class="sa-checkbox-label">
+              {{ form.is_active }}
+              <span>Active account (uncheck to deactivate user login access)</span>
+            </label>
+          </div>
+        </fieldset>
+
+        {% include "system_admin/components/module_permissions.html" %}
+
+
+        {% include "system_admin/components/client_access_cards.html" %}
+
+
+        <div class="sa-form-actions bo-user-footer">
+          <button type="submit" class="sa-btn sa-btn-primary">Save Changes</button>
+          <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

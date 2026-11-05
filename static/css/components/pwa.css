@@ -1,0 +1,64 @@
+/* ==========================================================================
+   FiCol PWA Component Stylesheet
+   Styles for PWA update notifications and application shell integration
+   ========================================================================== */
+
+.pwa-update-banner[hidden] {
+  display: none !important;
+}
+
+.pwa-update-banner {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: calc(100% - 2rem);
+  max-width: 480px;
+  background-color: #0B192C;
+  color: #FFFFFF;
+  border: 1px solid #1E293B;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  padding: 0.75rem 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.pwa-update-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pwa-update-text {
+  margin: 0;
+  font-weight: 500;
+  color: #F8FAFC;
+}
+
+.pwa-update-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.875rem;
+  background-color: #1D4ED8;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 38px;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.pwa-update-button:hover,
+.pwa-update-button:focus-visible {
+  background-color: #1E40AF;
+  outline: 2px solid #93C5FD;
+  outline-offset: 2px;
+}

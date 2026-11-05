@@ -1,0 +1,14 @@
+# Python dependencies, pinned to the current development environment.
+Django==6.1.2
+python-dotenv==1.2.4
+psycopg[binary]==3.3.6
+whitenoise==6.11.0
+django-storages[s3]==1.14.6
+gunicorn==23.0.0
+
+# System prerequisites: PostgreSQL with PostGIS, plus GDAL and GEOS.
+# These are installed separately, not through pip.
+
+# Frontend dependencies are declared in frontend/package.json and package-lock.json.
+# Install: npm --prefix frontend ci
+# Build: npm --prefix frontend run build:css

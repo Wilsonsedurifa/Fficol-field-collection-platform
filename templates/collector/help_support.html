@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Help & Support | FiCol{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/collector/help_support.css' %}">
+{% endblock %}
+
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Help & Support" %}{% endblock %}
+
+{% block content %}
+<main class="help-page" aria-label="Field Collector Help and Operational Guidance">
+  <header class="help-header">
+    <h1 class="help-title">Collector Help &amp; Support</h1>
+    <p class="help-subtitle">Field operational guidance and policies for FiCol field collectors.</p>
+  </header>
+
+  <div class="help-sections">
+    <!-- Notice Banner: Administrative Role & Approvals -->
+    <section class="help-callout-banner" aria-label="Key operational policies">
+      <h2 class="callout-banner-title">Important Operational Policies</h2>
+      <ul class="callout-list">
+        <li><strong>No handling of cash or payments:</strong> Collectors must not receive customer money under any circumstances. You may only assist customers with verified payment channels and submit payment proof for Back Office review.</li>
+        <li><strong>Administrative review &amp; approvals:</strong> Collectors cannot approve their own activity, payment verification, account closure, points, commissions, or assignment release requests. All verifications and decisions are strictly performed by Back Office administrators.</li>
+        <li><strong>Internal records only:</strong> Logging Call, SMS, or Email contact attempts creates an internal audit record only; it never sends an external call, SMS, or email message.</li>
+      </ul>
+    </section>
+
+    <!-- Operational Guides Grid -->
+    <div class="help-grid">
+      <!-- 1. Accepting Offers -->
+      <article class="help-card">
+        <h2 class="help-card-title">1. Accepting Account Offers</h2>
+        <p>Go to <a href="{% url 'assignments:account_offers' %}" class="help-link">Account Offers</a> and toggle your availability to Online. The platform discovers nearby accounts matching your approved client access within your service radius.</p>
+        <ul class="help-card-list">
+          <li>Review the approximate area, distance, and earnings terms before accepting.</li>
+          <li>You can accept up to 10 offers per rolling 24-hour period.</li>
+          <li>Once accepted, the account moves immediately to My Accounts.</li>
+        </ul>
+      </article>
+
+      <!-- 2. Using My Accounts -->
+      <article class="help-card">
+        <h2 class="help-card-title">2. Using My Accounts</h2>
+        <p>Visit <a href="{% url 'assignments:my_accounts' %}" class="help-link">My Accounts</a> to review all currently assigned accounts.</p>
+        <ul class="help-card-list">
+          <li>Your assigned accounts remain yours even when you toggle availability offline.</li>
+          <li>Each account card shows the customer name, reference number, target address, and action deadlines.</li>
+          <li>Select "Open account" to access full customer details, contact attempt history, visit tools, and notes.</li>
+        </ul>
+      </article>
+
+      <!-- 3. Remote Contact Attempts (Call, SMS, Email) -->
+      <article class="help-card">
+        <h2 class="help-card-title">3. Logging Contact Attempts</h2>
+        <p>On the account detail page, use the Contact Attempt section above Collection Visits to log remote outreach.</p>
+        <ul class="help-card-list">
+          <li>Select the method (Call, SMS, or Email), outcome, and enter clear notes.</li>
+          <li><strong>Internal record only:</strong> Saving an attempt records an internal history entry on the account. FiCol never initiates phone calls, sends text messages, or delivers emails to the customer.</li>
+          <li>Recent contact attempt history is displayed newest-first, separate from field visit records.</li>
+        </ul>
+      </article>
+
+      <!-- 4. Collection Visits -->
+      <article class="help-card">
+        <h2 class="help-card-title">4. Field Collection Visits</h2>
+        <p>When arriving at a customer location, use the Collection Visit section on the account page.</p>
+        <ul class="help-card-list">
+          <li>Start the visit on site. Only one ongoing visit is permitted across all your assigned accounts.</li>
+          <li>Capture your GPS location and record the outcome and detailed field observations.</li>
+          <li>Completed visits are submitted to Back Office for review.</li>
+        </ul>
+      </article>
+
+      <!-- 5. Payment-Proof Reporting -->
+      <article class="help-card">
+        <h2 class="help-card-title">5. Reporting Customer Payments</h2>
+        <p>When a customer makes a direct payment or bank transfer:</p>
+        <ul class="help-card-list">
+          <li><strong>Do not receive money:</strong> Field collectors are never permitted to take customer cash, checks, or transfers directly.</li>
+          <li>Guide the customer to pay directly through client-approved payment channels.</li>
+          <li>Submit a payment assistance report with the amount, reference, and photo proof (e.g. deposit slip or bank receipt) for independent Back Office verification.</li>
+        </ul>
+      </article>
+
+      <!-- 6. Information Proposals -->
+      <article class="help-card">
+        <h2 class="help-card-title">6. Proposing Account Updates</h2>
+        <p>If you discover new customer information during skip-tracing or field visits:</p>
+        <ul class="help-card-list">
+          <li>Submit an information proposal for new addresses, phone numbers, email addresses, contact persons, or payment arrangements.</li>
+          <li>Back Office reviews and validates the proposal before the official account records are updated.</li>
+        </ul>
+      </article>
+
+      <!-- 7. Follow-ups & Scheduling -->
+      <article class="help-card">
+        <h2 class="help-card-title">7. Follow-ups &amp; Scheduling</h2>
+        <p>When an account requires a return visit or scheduled phone follow-up:</p>
+        <ul class="help-card-list">
+          <li>Submit a follow-up request with your suggested date and reason.</li>
+          <li>Back Office reviews the request and assigns an authorized start window and deadline.</li>
+          <li>Track upcoming and overdue deadlines on the <a href="{% url 'activities:followups' %}" class="help-link">Follow-ups</a> page.</li>
+        </ul>
+      </article>
+
+      <!-- 8. Assignment Release Requests -->
+      <article class="help-card">
+        <h2 class="help-card-title">8. Requesting an Assignment Release</h2>
+        <p>If an account cannot be serviced due to address invalidity, customer relocation, or security concerns:</p>
+        <ul class="help-card-list">
+          <li>Submit a release request from the account detail page with supporting explanation.</li>
+          <li>The account remains assigned to you until Back Office reviews and approves the release.</li>
+        </ul>
+      </article>
+    </div>
+
+    <!-- Administrative Contact Card -->
+    <section class="help-contact-card" aria-label="Administrator assistance">
+      <h2 class="help-contact-title">Need Administrative Assistance?</h2>
+      <p class="help-contact-desc">For changes to your collector profile, approval status, service area, client access permissions, account reassignments, or platform technical issues, please contact your FiCol administrator.</p>
+    </section>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}Clients | FiCol System Admin{% endblock %}
+
+{% block admin_content %}
+<div class="sa-container">
+  <div class="sa-page-header">
+    <div>
+      <h2 class="sa-page-title">Client Management</h2>
+      <p class="sa-page-desc">Manage client organizations and active operational availability.</p>
+    </div>
+    <div class="sa-page-actions">
+      <a href="{% url 'system_admin_client_create' %}" class="sa-btn sa-btn-primary">Create Client</a>
+    </div>
+  </div>
+
+  <div class="sa-card sa-filter-card">
+    <form method="get" action="{% url 'system_admin_clients' %}" class="sa-search-form">
+      <div class="sa-search-group">
+        <label for="sa-client-search" class="sa-visually-hidden">Search clients</label>
+        <input type="text" id="sa-client-search" name="q" value="{{ search_query }}" placeholder="Search by client code or name..." class="sa-input">
+        <button type="submit" class="sa-btn sa-btn-secondary">Search</button>
+        {% if search_query %}
+          <a href="{% url 'system_admin_clients' %}" class="sa-btn sa-btn-ghost">Clear</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="sa-card sa-table-card">
+    <div class="sa-table-responsive">
+      <table class="sa-table">
+        <thead>
+          <tr>
+            <th scope="col">Code</th>
+            <th scope="col">Organization Name</th>
+            <th scope="col">Status</th>
+            <th scope="col">Created At</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for client in page_obj %}
+          <tr>
+            <td><strong>{{ client.code }}</strong></td>
+            <td>{{ client.name }}</td>
+            <td>
+              {% if client.is_active %}
+                <span class="sa-badge sa-badge-success">Active</span>
+              {% else %}
+                <span class="sa-badge sa-badge-danger">Inactive</span>
+              {% endif %}
+            </td>
+            <td>{{ client.created_at|date:"Y-m-d H:i" }}</td>
+            <td>
+              <a href="{% url 'system_admin_client_edit' client.pk %}" class="sa-btn sa-btn-sm sa-btn-outline">Edit</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="sa-empty-cell">No clients found matching your search.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="sa-pagination" aria-label="Clients pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="sa-page-link">&laquo; Previous</a>
+      {% endif %}
+      <span class="sa-page-current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="sa-page-link">Next &raquo;</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

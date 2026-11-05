@@ -1,0 +1,146 @@
+<!-- Primary Collector Navigation Sidebar Component -->
+<nav id="app-sidebar" 
+     class="sidebar" 
+     aria-label="Collector navigation" 
+     aria-hidden="true">
+
+  <!-- Sidebar Brand Header -->
+  <div class="sidebar-brand">
+    <a href="{% url 'collector_dashboard' %}" class="brand-group" aria-label="FiCol Dashboard Home">
+      <div class="brand-mark" aria-hidden="true">F</div>
+      <div>
+        <div class="brand-text">FiCol</div>
+        <div class="brand-sub">Field Collection</div>
+      </div>
+    </a>
+
+    <!-- Mobile Drawer Close Button -->
+    <button type="button" 
+            id="sidebar-close-btn" 
+            class="sidebar-close-btn" 
+            aria-label="Close navigation menu" 
+            title="Close menu">
+      <svg class="close-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="15" y1="5" x2="5" y2="15"/><line x1="5" y1="5" x2="15" y2="15"/></svg>
+      <span>Close</span>
+    </button>
+  </div>
+
+  <!-- Navigation Links -->
+  <div class="sidebar-nav">
+    <div class="nav-label-group">Operations</div>
+
+    <!-- 1. Dashboard (Active) -->
+    <a href="{% url 'collector_dashboard' %}" class="nav-item {% if not collector_section or collector_section == 'dashboard' %}active{% endif %}" {% if not collector_section or collector_section == 'dashboard' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg>
+      <span class="nav-label">Dashboard</span>
+    </a>
+
+    <!-- 2. Account Offers -->
+    <a href="{% url 'assignments:account_offers' %}" class="nav-item {% if collector_section == 'offers' %}active{% endif %}" {% if collector_section == 'offers' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 6.5l-4-4H4a1.5 1.5 0 00-1.5 1.5v12A1.5 1.5 0 004 17.5h12a1.5 1.5 0 001.5-1.5V7.5a1 1 0 00-1-1z"/><path d="M12 2.5v4h4"/><path d="M7 11h6"/><path d="M7 14h4"/></svg>
+      <span class="nav-label">Account Offers</span>
+      {% if offers_connected and nearby_offers %}
+        <span class="nav-pill nav-pill-primary">{{ nearby_offers|length }}</span>
+      {% endif %}
+    </a>
+
+    <!-- 3. My Accounts -->
+    <a href="{% url 'assignments:my_accounts' %}" class="nav-item {% if collector_section == 'accounts' %}active{% endif %}" {% if collector_section == 'accounts' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17v-1.5a3.5 3.5 0 00-3.5-3.5h-5A3.5 3.5 0 004 15.5V17"/><circle cx="10" cy="7" r="3.5"/></svg>
+      <span class="nav-label">My Accounts</span>
+      {% if assigned_accounts_connected %}
+        <span class="nav-pill nav-pill-subtle">{{ assigned_accounts|length }}</span>
+      {% endif %}
+    </a>
+
+    <!-- 4. Follow-ups -->
+    <a href="{% url 'activities:followups' %}" class="nav-item {% if collector_section == 'followups' %}active{% endif %}" {% if collector_section == 'followups' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><polyline points="10 6 10 10 13 12"/></svg>
+      <span class="nav-label">Follow-ups</span>
+      {% if follow_ups_connected and follow_ups_total %}
+        <span class="nav-pill nav-pill-amber">{{ follow_ups_total }}</span>
+      {% endif %}
+    </a>
+
+    <div class="nav-label-group">Accounting & Review</div>
+
+    <!-- 5. Commissions -->
+    <a href="{% url 'collector_commissions' %}" class="nav-item {% if collector_section == 'commissions' %}active{% endif %}" {% if collector_section == 'commissions' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><path d="M2.5 8.5h15"/><circle cx="10" cy="12" r="1.5"/></svg>
+      <span class="nav-label">Commissions</span>
+    </a>
+
+    <!-- 6. Stars & Performance -->
+    <a href="{% url 'collector_performance' %}" class="nav-item {% if collector_section == 'performance' %}active{% endif %}" {% if collector_section == 'performance' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="10 2.5 12.3 7.2 17.5 8 13.8 11.6 14.6 16.8 10 14.3 5.4 16.8 6.2 11.6 2.5 8 7.7 7.2 10 2.5"/></svg>
+      <span class="nav-label">Stars &amp; Performance</span>
+    </a>
+
+    <div class="nav-label-group">Account & Settings</div>
+
+    <!-- 7. Profile -->
+    <a href="{% url 'collector_profile' %}" class="nav-item {% if collector_section == 'profile' %}active{% endif %}" {% if collector_section == 'profile' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="6.5" r="3.5"/><path d="M3.5 17a6.5 6.5 0 0113 0"/></svg>
+      <span class="nav-label">Profile</span>
+    </a>
+
+    <!-- 8. Help & Support -->
+    <a href="{% url 'collector_help' %}" class="nav-item {% if collector_section == 'help' %}active{% endif %}" {% if collector_section == 'help' %}aria-current="page"{% endif %}>
+      <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M7.8 8a2.2 2.2 0 014.4 0c0 1.5-2.2 2-2.2 3.2"/><circle cx="10" cy="14.5" r="0.75" fill="currentColor"/></svg>
+      <span class="nav-label">Help &amp; Support</span>
+    </a>
+
+    <!-- 9. Sign Out (Secure POST form to 'logout') -->
+    <form action="{% url 'logout' %}" method="post" class="nav-signout-form">
+      {% csrf_token %}
+      <button type="submit" class="nav-item nav-signout-btn" aria-label="Sign out of FiCol">
+        <svg class="nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 16.5H4a1.5 1.5 0 01-1.5-1.5V5A1.5 1.5 0 014 3.5h3.5"/><polyline points="13 13.5 16.5 10 13 6.5"/><line x1="7.5" y1="10" x2="16.5" y2="10"/></svg>
+        <span class="nav-label">Sign Out</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Sidebar Footer: Collector Identity & Actual Availability -->
+  <div class="sidebar-footer">
+    <div class="collector-badge-card">
+      <div class="collector-id-row">
+        <div class="avatar-sm" aria-hidden="true">
+          {{ request.user.first_name|first|default:request.user.username|first|upper }}
+        </div>
+        <div class="collector-meta-wrap">
+          <div class="collector-meta-title" title="{{ request.user.get_full_name|default:request.user.username }}">
+            {{ request.user.get_full_name|default:request.user.username }}
+          </div>
+          <div class="collector-meta-sub">
+            Collector &bull; {{ collector_profile.get_approval_status_display|default:collector_profile.approval_status|title }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Actual Availability Status Indicator (from collector_profile.availability) -->
+      <div id="sidebar-availability" class="availability-status-pill pill-{{ collector_profile.availability|default:'offline' }}">
+        <div class="pill-status-label">
+          <span id="sidebar-availability-dot" class="status-indicator-dot dot-{{ collector_profile.availability|default:'offline' }}" aria-hidden="true"></span>
+          <span id="sidebar-availability-label">
+            {% if collector_profile.availability == "online" %}
+              Available
+            {% elif collector_profile.availability == "busy" %}
+              Busy
+            {% else %}
+              Offline
+            {% endif %}
+          </span>
+        </div>
+        <span id="sidebar-availability-code" class="pill-status-code">
+          {{ collector_profile.availability|default:"offline"|upper }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+</nav>
+
+<!-- Mobile Drawer Backdrop Overlay -->
+<div id="mobile-sidebar-backdrop" 
+     class="sidebar-backdrop" 
+     aria-hidden="true"></div>

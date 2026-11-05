@@ -1,0 +1,11 @@
+{% extends "system_admin/base.html" %}
+{% block title %}{{ page_title }} | FiCol System Admin{% endblock %}
+{% block admin_content %}
+<div class="sa-container">
+  <div class="sa-page-header"><div><h2 class="sa-page-title">{{ page_title }}</h2><p class="sa-page-desc">Showing up to 200 most recent matching records.</p></div><a class="sa-btn sa-btn-secondary" href="{% url 'system_admin_dashboard' %}">Back to dashboard</a></div>
+  <div class="sa-card sa-table-card"><div class="sa-table-responsive"><table class="sa-table">
+    <thead><tr><th scope="col">Record</th><th scope="col">Details</th><th scope="col">Status</th></tr></thead>
+    <tbody>{% for row in records %}<tr><td>{{ row.record }}</td><td>{{ row.detail }}</td><td>{{ row.status }}</td></tr>{% empty %}<tr><td colspan="3" class="sa-empty-cell">No matching records.</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static tz %}
+{% block title %}My Accounts | FiCol{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/collector/my_accounts.css' %}">
+{% endblock %}
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="My Accounts" %}{% endblock %}
+{% block content %}{% timezone "Asia/Manila" %}
+<main class="accounts-page" aria-label="Your assigned accounts">
+  <div class="accounts-heading"><div><h2>My assigned accounts</h2><p>Your active assignments remain yours when you go offline.</p></div><a class="account-button primary" href="{% url 'assignments:account_offers' %}">Find offers</a></div>
+  <div class="accounts-summary"><strong>{{ assigned_count }} active account{{ assigned_count|pluralize }}</strong><span>Accepted in last 24 hours: {{ daily_acceptance.used }}/{{ daily_acceptance.limit }}</span></div>
+  <form class="account-search" method="get" role="search">
+    <label for="account-search">Find an assigned account</label>
+    <div class="account-search-controls"><input id="account-search" type="search" name="q" value="{{ search_query }}" maxlength="100" placeholder="Account reference, customer or address"><button class="account-button primary" type="submit">Search</button>{% if search_query %}<a class="account-button" href="{% url 'assignments:my_accounts' %}">Clear</a>{% endif %}</div>
+  </form>
+
+  <!-- Quick Status Filter Pills & Offline Download Action -->
+  <div class="account-filter-bar" style="display: flex; gap: 8px; margin: 12px 0 16px; flex-wrap: wrap; align-items: center;" role="radiogroup" aria-label="Filter accounts by visit status">
+    <button type="button" class="filter-pill active" data-filter="all" style="padding: 6px 14px; border-radius: 9999px; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; background: #1e293b; color: #ffffff; cursor: pointer;">
+      Lahat
+    </button>
+    <button type="button" class="filter-pill" data-filter="pending" style="padding: 6px 14px; border-radius: 9999px; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; cursor: pointer;">
+      🎯 Pupuntahan Pa
+    </button>
+    <button type="button" class="filter-pill" data-filter="completed" style="padding: 6px 14px; border-radius: 9999px; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; cursor: pointer;">
+      ✅ Nabisita Na
+    </button>
+    <button id="btn-manual-sync" type="button" style="margin-left: auto; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; cursor: pointer;">
+      ⚡ I-download para sa Offline Work
+    </button>
+  </div>
+
+  {% if search_query %}<p class="search-result-count">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }} for “{{ search_query }}”</p>{% endif %}
+  <div class="account-grid">
+    {% for item in work %}
+    <article class="account-card" data-assignment-id="{{ item.pk }}">
+      <div class="account-card-heading"><h3>{{ item.account.reference }}</h3><span class="account-status">Assigned</span></div>
+      <p class="account-customer">{{ item.account.customer.display_name }}</p>
+      <p>{{ item.account.client.name }}</p><p>{{ item.target_address.address_line }}</p>
+      <dl><dt>Outstanding balance</dt><dd>{{ item.account.currency }} {{ item.account.balance_snapshot|floatformat:2 }}</dd><dt>Balance last updated</dt><dd>{{ item.account.balance_as_of|date:"d M Y, g:i A" }}</dd><dt>First action due</dt><dd>{{ item.first_action_due_at|date:"d M Y, g:i A" }}</dd>{% if item.next_action_due_at %}<dt>Next action due</dt><dd>{{ item.next_action_due_at|date:"d M Y, g:i A" }}</dd>{% endif %}</dl>
+      <a class="account-button primary" href="{% url 'assignments:account_detail' item.pk %}" aria-label="Open account {{ item.account.reference }}">Open account</a>
+    </article>
+    {% empty %}
+    <section class="account-empty">
+      {% if search_query %}<h3>No matching accounts</h3><p>Try another reference, customer name or address.</p><a class="account-button" href="{% url 'assignments:my_accounts' %}">Show all assigned accounts</a>
+      {% else %}<h3>No accounts assigned yet</h3><p>Go online, update your location, then find nearby offers.</p><a class="account-button primary" href="{% url 'assignments:account_offers' %}">View Account Offers</a>{% endif %}
+    </section>
+    {% endfor %}
+  </div>
+  {% if page_obj.has_other_pages %}<nav class="accounts-pagination" aria-label="Account pages">{% if page_obj.has_previous %}<a class="account-button" href="?q={{ search_query|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}<span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="account-button" href="?q={{ search_query|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
+  <p class="accounts-note">Times are shown in Philippine time. Balances reflect the latest supplied account information.</p>
+</main>
+{% endtimezone %}{% endblock %}
+{% block extra_js %}<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>
+<script src="{% static 'js/collector/my_accounts.js' %}" defer></script>{% endblock %}

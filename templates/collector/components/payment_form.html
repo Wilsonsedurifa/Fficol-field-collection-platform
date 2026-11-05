@@ -1,0 +1,61 @@
+{% load tz %}
+<section id="payment-panel" class="visit-card" aria-labelledby="payment-heading">
+  <div class="flex items-center justify-between">
+    <h2 id="payment-heading">Report Customer Payment</h2>
+  </div>
+  <p class="field-hint">Record customer direct payment proof. <strong>Collectors do not receive or hold customer money through FiCol.</strong></p>
+
+  <p id="payment-feedback" class="visit-feedback" role="status" aria-live="polite" hidden></p>
+
+  {% if has_pending_payment_report %}
+  <p class="visit-feedback" role="status">A payment report for this account is awaiting Back Office verification. You can submit another report here after it is verified or rejected.</p>
+  {% endif %}
+
+  <form id="payment-report-form" enctype="multipart/form-data" method="post" action="{{ payment_report_url }}"{% if has_pending_payment_report %} aria-disabled="true"{% endif %}>
+    {% csrf_token %}
+    <input type="hidden" id="payment-event-id" name="event_id" value="">
+
+    <div class="visit-fields">
+      <div>
+        <label for="payment-amount">Amount ({{ assignment.account.currency }}) <span class="field-hint">*</span></label>
+        <input id="payment-amount" name="amount" type="number" inputmode="decimal" min="0.01" max="999999999999.99" step="0.01" required placeholder="0.00"{% if has_pending_payment_report %} disabled{% endif %}>
+      </div>
+      <div>
+        <label for="payment-paid-at">Payment date and time (Philippine time) <span class="field-hint">*</span></label>
+        <input id="payment-paid-at" name="paid_at" type="datetime-local" required{% if has_pending_payment_report %} disabled{% endif %}>
+      </div>
+    </div>
+
+    <div class="visit-fields mt-3">
+      <div>
+        <label for="payment-method">Payment method <span class="field-hint">*</span></label>
+        <select id="payment-method" name="method" required{% if has_pending_payment_report %} disabled{% endif %}>
+          <option value="">Choose payment channel</option>
+          {% for val, label in payment_methods %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="payment-reference">Reference / receipt number</label>
+        <input id="payment-reference" name="reference" type="text" maxlength="100" placeholder="e.g. Bank txn / deposit code"{% if has_pending_payment_report %} disabled{% endif %}>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <label for="payment-proof">Proof of payment document / receipt <span class="field-hint">JPG, PNG, WebP or PDF (Max 5 MB) *</span></label>
+      <input id="payment-proof" name="proof_file" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"{% if has_pending_payment_report %} disabled{% endif %}>
+    </div>
+
+    <div class="mt-3">
+      <label for="payment-notes">Notes <span class="field-hint">Observations regarding customer direct payment</span></label>
+      <textarea id="payment-notes" name="notes" maxlength="5000" rows="2" placeholder="Optional remarks"{% if has_pending_payment_report %} disabled{% endif %}></textarea>
+    </div>
+
+    <p class="field-hint mt-2">Reporting a payment submits proof to Back Office for verification. It does not automatically change balance, close the account, or generate commission.</p>
+
+    <div class="visit-buttons mt-4">
+      <button id="submit-payment-btn" class="visit-button primary" type="submit"{% if has_pending_payment_report %} disabled{% endif %}>Submit Payment Report</button>
+    </div>
+  </form>
+</section>

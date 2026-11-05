@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title|default:"System Admin" }} | FiCol System Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/system_admin/portal.css' %}?v=fixed-sidebar-20261020">{% endblock %}
+{% block sidebar %}{% include "system_admin/components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "system_admin/components/navbar.html" %}{% endblock %}
+{% block content %}
+<main id="sa-content" class="sa-content" tabindex="-1">
+  {% if messages %}
+    <div class="sa-messages" role="status">
+      {% for message in messages %}
+        <div class="sa-message sa-message-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block admin_content %}{% endblock %}
+</main>
+{% endblock %}
+{% block extra_js %}{% endblock %}

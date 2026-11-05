@@ -1,0 +1,27 @@
+<header class="sa-topbar" aria-label="System Admin navigation bar">
+  <div class="sa-topbar-title">
+    <h1>{{ page_title|default:"System Admin" }}</h1>
+    <span class="sa-context-label">System Administration</span>
+  </div>
+  <div class="sa-topbar-actions">
+    <details class="sa-profile-dropdown">
+      <summary class="sa-user-badge" aria-label="Account options">
+      <span class="sa-avatar" aria-hidden="true">{{ request.user.first_name|first|default:request.user.username|first|upper }}</span>
+      <div class="sa-user-meta">
+        <span class="sa-user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <span class="sa-user-role">Superuser</span>
+      </div>
+        <span class="sa-profile-chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="sa-profile-menu">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="sa-dropdown-item" type="submit">
+            <svg class="sa-nav-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 16.5H4a1.5 1.5 0 01-1.5-1.5V5A1.5 1.5 0 014 3.5h3.5"/><polyline points="13 13.5 16.5 10 13 6.5"/><line x1="7.5" y1="10" x2="16.5" y2="10"/></svg>
+            Sign Out
+          </button>
+        </form>
+      </div>
+    </details>
+  </div>
+</header>

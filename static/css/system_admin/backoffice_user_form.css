@@ -1,0 +1,38 @@
+.bo-user-page .bo-user-fields,
+.bo-user-page .perm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.bo-user-page .bo-user-fields .sa-form-group { margin: 0; min-width: 0; }
+.bo-user-page .sa-input { width: 100%; box-sizing: border-box; }
+.bo-user-page .perm-group { min-width: 0; margin: 20px 0 0; padding: 0; border: 0; }
+.bo-user-page .perm-group legend { font-weight: 700; color: var(--sa-text); padding: 0; margin-bottom: 8px; }
+.bo-user-page .perm-group-actions { display: flex; gap: 12px; margin-bottom: 12px; }
+.bo-user-page .perm-group-actions button { border: 0; background: transparent; color: var(--sa-primary); padding: 6px 0; font: inherit; font-size: 13px; cursor: pointer; }
+.bo-user-page .perm-count { color: var(--sa-text-muted); font-size: 13px; }
+.bo-user-page .perm-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--sa-border);
+  border-radius: var(--sa-radius-md);
+  background: var(--sa-bg);
+  cursor: pointer;
+  min-width: 0;
+}
+.bo-user-page .perm-card input { width: 18px; height: 18px; margin: 3px 0 0; flex-shrink: 0; accent-color: var(--sa-primary); }
+.bo-user-page .perm-card strong { display: block; color: var(--sa-text); font-weight: 700; overflow-wrap: anywhere; }
+.bo-user-page .perm-card small { display: block; margin-top: 5px; color: var(--sa-text-muted); line-height: 1.5; }
+.bo-user-page .perm-card:has(input:checked) { background: var(--sa-primary-light); border-color: var(--sa-primary); }
+.bo-user-page .perm-card:focus-within,
+.bo-user-page button:focus-visible,
+.bo-user-page a:focus-visible { outline: 2px solid var(--sa-primary); outline-offset: 3px; }
+.bo-user-page .bo-user-footer { position: sticky; bottom: 0; z-index: 2; background: var(--sa-card-bg); padding: 16px 0; border-top: 1px solid var(--sa-border); flex-wrap: wrap; }
+.bo-user-page .bo-user-summary { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--sa-border); }
+.bo-user-page [hidden] { display: none !important; }
+@media (max-width: 639px) {
+  .bo-user-page .bo-user-fields,
+  .bo-user-page .perm-grid { grid-template-columns: minmax(0, 1fr); }
+}

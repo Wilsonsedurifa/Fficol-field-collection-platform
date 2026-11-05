@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load static tz %}
+
+{% block title %}Stars &amp; Performance | FiCol{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<style>
+.perf-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.perf-header {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.perf-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 6px;
+}
+.perf-header p {
+  font-size: 14px;
+  color: var(--text-subtle, #64748b);
+  margin: 0;
+}
+.total-points-card {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  border-radius: 14px;
+  padding: 24px;
+  color: #ffffff;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.total-points-label {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+.total-points-value {
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+.total-points-sub {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.cat-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.cat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.cat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-subtle, #64748b);
+}
+.cat-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: #f1f5f9;
+  color: #475569;
+}
+.cat-points {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+.cat-desc {
+  font-size: 12px;
+  color: var(--text-subtle, #64748b);
+  margin-top: 4px;
+}
+.perf-section {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.section-title {
+  font-size: 17px;
+  font-weight: 750;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 16px;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  padding-bottom: 12px;
+}
+.perf-table-wrap {
+  overflow-x: auto;
+}
+.perf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.perf-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.perf-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+.perf-table tr:hover td {
+  background: #fafafa;
+}
+.badge-emerald {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.empty-msg {
+  padding: 28px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+</style>
+{% endblock %}
+
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Stars & Performance" %}{% endblock %}
+
+{% block content %}
+{% timezone "Asia/Manila" %}
+<main class="perf-page" aria-label="Collector verified points and performance">
+  <!-- Header -->
+  <header class="perf-header">
+    <h1>Stars &amp; Performance</h1>
+    <p>Verified operational activity points awarded when Back Office approves customer information updates. Exactly 1 point is credited per approved proposal when an active point rule is in effect.</p>
+  </header>
+
+  <!-- Total Points Hero -->
+  <div class="total-points-card">
+    <div>
+      <div class="total-points-label">Total Verified Points</div>
+      <div class="total-points-value">{{ summary.total }} <span style="font-size: 20px; font-weight: 600;">pts</span></div>
+      <div class="total-points-sub">Credited exclusively for verified customer information updates</div>
+    </div>
+    <div style="text-align: right;">
+      <span class="badge-emerald" style="font-size: 13px; padding: 6px 12px;">Verification Status: Current</span>
+    </div>
+  </div>
+
+  <!-- Category Breakdown (All 5 Categories) -->
+  <section class="perf-section" aria-labelledby="breakdown-heading">
+    <h2 id="breakdown-heading" class="section-title">Points by Information Category</h2>
+    <div class="categories-grid">
+      <div class="cat-card">
+        <div class="cat-top">
+          <span class="cat-label">Address</span>
+          <span class="cat-badge">Verified</span>
+        </div>
+        <div class="cat-points">{{ summary.breakdown.address.points|default:0 }} <span style="font-size: 14px; color: #64748b;">pts</span></div>
+        <div class="cat-desc">Confirmed location and residential updates</div>
+      </div>
+
+      <div class="cat-card">
+        <div class="cat-top">
+          <span class="cat-label">Email</span>
+          <span class="cat-badge">Verified</span>
+        </div>
+        <div class="cat-points">{{ summary.breakdown.email.points|default:0 }} <span style="font-size: 14px; color: #64748b;">pts</span></div>
+        <div class="cat-desc">Validated electronic mail contacts</div>
+      </div>
+
+      <div class="cat-card">
+        <div class="cat-top">
+          <span class="cat-label">Phone</span>
+          <span class="cat-badge">Verified</span>
+        </div>
+        <div class="cat-points">{{ summary.breakdown.phone.points|default:0 }} <span style="font-size: 14px; color: #64748b;">pts</span></div>
+        <div class="cat-desc">Confirmed active phone numbers</div>
+      </div>
+
+      <div class="cat-card">
+        <div class="cat-top">
+          <span class="cat-label">Contact Person</span>
+          <span class="cat-badge">Verified</span>
+        </div>
+        <div class="cat-points">{{ summary.breakdown.contact_person.points|default:0 }} <span style="font-size: 14px; color: #64748b;">pts</span></div>
+        <div class="cat-desc">Authorized third-party contacts</div>
+      </div>
+
+      <div class="cat-card">
+        <div class="cat-top">
+          <span class="cat-label">Payment Arrangement</span>
+          <span class="cat-badge">Verified</span>
+        </div>
+        <div class="cat-points">{{ summary.breakdown.payment_arrangement.points|default:0 }} <span style="font-size: 14px; color: #64748b;">pts</span></div>
+        <div class="cat-desc">Validated Promise-to-Pay arrangements</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Point Transactions History -->
+  <section class="perf-section" aria-labelledby="history-heading">
+    <h2 id="history-heading" class="section-title">Verified Point History</h2>
+    <div class="perf-table-wrap">
+      <table class="perf-table">
+        <thead>
+          <tr>
+            <th scope="col">Account</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Category</th>
+            <th scope="col">Points</th>
+            <th scope="col">Rule Version</th>
+            <th scope="col">Approved By</th>
+            <th scope="col">Date Awarded</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transactions %}
+          <tr>
+            <td style="font-weight: 600;">{{ t.proposal.account.reference|default:"--" }}</td>
+            <td>{{ t.proposal.account.customer.full_name|default:"--" }}</td>
+            <td>{{ t.get_category_display }}</td>
+            <td style="font-weight: 700; color: #047857;">+{{ t.points }} pt</td>
+            <td style="font-family: monospace;">v{{ t.rule_version }}</td>
+            <td>{{ t.approved_by.get_full_name|default:t.approved_by.username|default:"Back Office" }}</td>
+            <td>{{ t.created_at|date:"d M Y, g:i A" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="empty-msg">
+              No verified points recorded yet. Points are awarded when submitted information proposals are approved by Back Office under an active point rule.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+{% endtimezone %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>
+{% endblock %}

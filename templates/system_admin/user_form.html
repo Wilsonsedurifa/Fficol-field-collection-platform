@@ -1,0 +1,230 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}
+  {% if is_create %}Create User Account{% elif is_superuser_account %}System Account (Read-Only){% else %}Edit User {{ target_user.username }}{% endif %} | FiCol System Admin
+{% endblock %}
+
+{% block admin_content %}
+<div class="sa-container sa-container-narrow">
+  <div class="sa-page-header">
+    <div>
+      <h2 class="sa-page-title">
+        {% if is_create %}
+          Create User Account
+        {% elif is_superuser_account %}
+          System Account: {{ target_user.username }}
+        {% else %}
+          Edit User: {{ target_user.username }}
+        {% endif %}
+      </h2>
+      <p class="sa-page-desc">
+        {% if is_create %}
+          Create an ordinary non-superuser account.
+        {% elif is_superuser_account %}
+          Superusers are protected read-only system accounts.
+        {% else %}
+          Manage active status, client access scopes, Back Office capabilities, collector status, or password reset.
+        {% endif %}
+      </p>
+    </div>
+    <div class="sa-page-actions">
+      <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-secondary">&larr; Back to Users</a>
+    </div>
+  </div>
+
+  {% if is_superuser_account %}
+    <div class="sa-card">
+      <div class="sa-alert sa-alert-info">
+        <strong>Protected System Account</strong>
+        <p>This account is an active superuser (<code>is_superuser=True</code>). In accordance with FiCol security policies, superuser accounts cannot be edited, deactivated, password-reset, or modified from the System Admin portal.</p>
+      </div>
+      <div class="sa-details-grid">
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Username</span>
+          <span class="sa-detail-value">{{ target_user.username }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Full Name</span>
+          <span class="sa-detail-value">{{ target_user.get_full_name|default:"—" }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Email</span>
+          <span class="sa-detail-value">{{ target_user.email|default:"—" }}</span>
+        </div>
+        <div class="sa-detail-item">
+          <span class="sa-detail-label">Account Status</span>
+          <span class="sa-detail-value">
+            {% if target_user.is_active %}<span class="sa-badge sa-badge-success">Active</span>{% else %}<span class="sa-badge sa-badge-danger">Inactive</span>{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+  {% elif is_create %}
+    <div class="sa-card">
+      <form method="post" action="{% url 'system_admin_user_create' %}" class="sa-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="sa-alert sa-alert-danger" role="alert">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="sa-form-group">
+          <label for="{{ form.username.id_for_label }}" class="sa-label">Username <span class="sa-required">*</span></label>
+          {{ form.username }}
+          {% if form.username.errors %}<p class="sa-field-error">{{ form.username.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="sa-form-row">
+          <div class="sa-form-group">
+            <label for="{{ form.password.id_for_label }}" class="sa-label">Temporary Password <span class="sa-required">*</span></label>
+            {{ form.password }}
+            {% if form.password.errors %}<p class="sa-field-error">{{ form.password.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="sa-form-group">
+            <label for="{{ form.password_confirm.id_for_label }}" class="sa-label">Confirm Temporary Password <span class="sa-required">*</span></label>
+            {{ form.password_confirm }}
+            {% if form.password_confirm.errors %}<p class="sa-field-error">{{ form.password_confirm.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div class="sa-form-row">
+          <div class="sa-form-group">
+            <label for="{{ form.first_name.id_for_label }}" class="sa-label">First Name</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}<p class="sa-field-error">{{ form.first_name.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="sa-form-group">
+            <label for="{{ form.last_name.id_for_label }}" class="sa-label">Last Name</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}<p class="sa-field-error">{{ form.last_name.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div class="sa-form-group">
+          <label for="{{ form.email.id_for_label }}" class="sa-label">Email Address</label>
+          {{ form.email }}
+          {% if form.email.errors %}<p class="sa-field-error">{{ form.email.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="sa-form-group sa-checkbox-group">
+          <label class="sa-checkbox-label">
+            {{ form.create_collector_profile }}
+            <span>Create pending Collector Profile for this user</span>
+          </label>
+        </div>
+
+        <div class="sa-form-actions">
+          <button type="submit" class="sa-btn sa-btn-primary">Create User Account</button>
+          <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <div class="sa-card">
+      <form method="post" action="{% url 'system_admin_user_edit' target_user.pk %}" class="sa-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="sa-alert sa-alert-danger" role="alert">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <fieldset class="sa-fieldset">
+          <legend class="sa-legend">Account Status</legend>
+          <div class="sa-form-group sa-checkbox-group">
+            <label class="sa-checkbox-label">
+              {{ form.is_active }}
+              <span>Active account (uncheck to deactivate user login access)</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="sa-fieldset">
+          <legend class="sa-legend">Active Client Access</legend>
+          <p class="sa-fieldset-desc">Select clients this user is authorized to access. Historical assignments are preserved when access is revoked. Inactive clients cannot be activated.</p>
+          {% if form.client_accesses.field.choices %}
+            <div class="sa-checkbox-grid">
+              {% for choice_val, choice_label in form.client_accesses.field.choices %}
+                <label class="sa-checkbox-label">
+                  <input type="checkbox" name="client_accesses" value="{{ choice_val }}" {% if choice_val in form.client_accesses.value or choice_val|stringformat:"s" in form.client_accesses.value or choice_val|add:"0" in form.client_accesses.value %}checked{% endif %} class="sa-checkbox-item">
+                  <span>{{ choice_label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="sa-text-muted">No active clients available in the system.</p>
+          {% endif %}
+          {% if form.client_accesses.errors %}<p class="sa-field-error">{{ form.client_accesses.errors.0 }}</p>{% endif %}
+        </fieldset>
+
+        <fieldset class="sa-fieldset">
+          <legend class="sa-legend">Direct Back Office Capabilities</legend>
+          <div class="sa-alert sa-alert-warning" role="note">
+            <strong>Portal Precedence Notice:</strong>
+            Granting any Back Office capability to a collector routes them into the Back Office portal and prevents them from accessing Collector pages, because existing FiCol authorization rules give Back Office precedence over collector profiles.
+          </div>
+          <p class="sa-fieldset-desc">Select specific direct Back Office permissions. Group memberships and unrelated permissions are preserved.</p>
+          {% if form.backoffice_permissions.field.choices %}
+            <div class="sa-checkbox-grid">
+              {% for choice_val, choice_label in form.backoffice_permissions.field.choices %}
+                <label class="sa-checkbox-label">
+                  <input type="checkbox" name="backoffice_permissions" value="{{ choice_val }}" {% if choice_val in form.backoffice_permissions.value or choice_val|stringformat:"s" in form.backoffice_permissions.value or choice_val|add:"0" in form.backoffice_permissions.value %}checked{% endif %} class="sa-checkbox-item">
+                  <span>{{ choice_label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="sa-text-muted">No Back Office permission records found in the database.</p>
+          {% endif %}
+          {% if form.backoffice_permissions.errors %}<p class="sa-field-error">{{ form.backoffice_permissions.errors.0 }}</p>{% endif %}
+        </fieldset>
+
+        <fieldset class="sa-fieldset">
+          <legend class="sa-legend">Collector Profile</legend>
+          {% if has_collector_profile %}
+            <div class="sa-form-group">
+              <label for="{{ form.collector_status.id_for_label }}" class="sa-label">Approval Status</label>
+              {{ form.collector_status }}
+              <p class="sa-help-text">Approving a collector records your approval evidence. Suspending or rejecting preserves prior approval evidence.</p>
+              {% if form.collector_status.errors %}<p class="sa-field-error">{{ form.collector_status.errors.0 }}</p>{% endif %}
+            </div>
+          {% else %}
+            <div class="sa-form-group sa-checkbox-group">
+              <label class="sa-checkbox-label">
+                {{ form.create_collector_profile }}
+                <span>Create pending Collector Profile for this user</span>
+              </label>
+              {% if form.create_collector_profile.errors %}<p class="sa-field-error">{{ form.create_collector_profile.errors.0 }}</p>{% endif %}
+            </div>
+          {% endif %}
+        </fieldset>
+
+        <fieldset class="sa-fieldset">
+          <legend class="sa-legend">Reset Password (Optional)</legend>
+          <p class="sa-fieldset-desc">Leave blank to keep the current password.</p>
+          <div class="sa-form-row">
+            <div class="sa-form-group">
+              <label for="{{ form.new_password.id_for_label }}" class="sa-label">New Password</label>
+              {{ form.new_password }}
+              {% if form.new_password.errors %}<p class="sa-field-error">{{ form.new_password.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="sa-form-group">
+              <label for="{{ form.new_password_confirm.id_for_label }}" class="sa-label">Confirm New Password</label>
+              {{ form.new_password_confirm }}
+              {% if form.new_password_confirm.errors %}<p class="sa-field-error">{{ form.new_password_confirm.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="sa-form-actions">
+          <button type="submit" class="sa-btn sa-btn-primary">Save Changes</button>
+          <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

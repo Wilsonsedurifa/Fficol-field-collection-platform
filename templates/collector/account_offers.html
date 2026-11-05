@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Account Offers | FiCol{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+<link rel="stylesheet" href="{% static 'css/collector/account_offers.css' %}">
+{% endblock %}
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Account Offers" %}{% endblock %}
+{% block content %}
+<main class="offers-page" aria-label="Nearby account offers">
+  <div class="offers-toolbar">
+    <div><h2>Find your next account</h2><p>Choose an offer on the map. Ownership starts after acceptance.</p></div>
+    <div class="toolbar-actions"><button type="button" id="availability-toggle" class="offer-button">Go online</button><button type="button" id="update-location" class="offer-button">Update location</button><button type="button" id="refresh-offers" class="offer-button primary">Refresh offers</button></div>
+  </div>
+  <div id="offer-actions" hidden>{% csrf_token %}</div>
+  {{ map_config|json_script:"offers-config" }}
+  <div class="readiness-bar"><span id="availability-label">{{ collector_profile.get_availability_display }}</span><span id="workload-label">Accepted in last 24 hours: {{ daily_acceptance.used }}/{{ daily_acceptance.limit }}</span><span id="location-label">Checking location...</span><button type="button" id="list-toggle" class="offer-button small" aria-expanded="false" aria-controls="offer-list-panel">Offer list</button></div>
+  <p id="offers-feedback" class="offers-feedback" role="status" aria-live="polite">Loading your offers...</p>
+  <section class="offers-workspace" aria-label="Map and offer selection">
+    <div id="offers-map" class="offers-map" aria-label="Nearby collection areas"></div>
+    <button type="button" id="recenter-map" class="recenter-button" aria-label="Centre map on your saved location">My location</button>
+    <aside id="offer-list-panel" class="offer-list-panel" aria-label="Offer list"><h3>Nearby offers <span id="offer-count">0</span></h3><p id="offers-empty" class="empty-copy">Offers will appear here after matching.</p><div id="offer-list"></div></aside>
+    <section id="selected-offer" class="selected-offer" aria-label="Selected offer" hidden>
+      <button type="button" id="sheet-toggle" class="sheet-toggle" aria-expanded="true" aria-controls="selected-offer-body">Offer details</button>
+      <div class="selected-heading"><h3 id="selected-reference"></h3><span id="selected-expiry" class="expiry-pill"></span></div>
+      <div id="selected-offer-body">
+      <p id="selected-area"></p><p id="selected-distance" class="muted"></p>
+      <div class="terms-block"><span>Collection visit</span><strong id="selected-terms"></strong></div>
+      <p id="selected-privacy" class="privacy-copy">Approximate area only. Exact address becomes available after acceptance.</p>
+      <div id="offer-response-actions" class="card-actions"><button type="button" id="accept-offer" class="offer-button primary">Accept Account</button><button type="button" id="decline-offer" class="offer-button">Decline</button></div>
+      <div id="assigned-actions" class="card-actions" hidden><a id="assigned-detail" class="offer-button" href="{% url 'assignments:my_accounts' %}">Open account</a><a id="assigned-directions" class="offer-button primary" target="_blank" rel="noopener noreferrer">Get Directions</a></div>
+      </div>
+    </section>
+    <div class="map-legend"><span class="legend-dot collector-dot"></span>Your saved location <span class="legend-dot offer-dot"></span>Approximate offer area</div>
+  </section>
+  <p class="map-note">Distances shown are approximate straight-line distances, not driving distances. <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener noreferrer">Report a map issue</a></p>
+  <noscript><p>Enable JavaScript to load offers and use the map.</p></noscript>
+  <dialog id="offer-confirmation" class="offer-dialog"><h2 id="confirmation-heading">Accept this account?</h2><p id="confirmation-copy"></p><p>Acceptance creates exclusive ownership after confirmation. Review the earning terms above before continuing.</p><div class="card-actions"><button type="button" id="cancel-confirmation" class="offer-button">Cancel</button><button type="button" id="confirm-acceptance" class="offer-button primary">Confirm acceptance</button></div></dialog>
+</main>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous" defer></script>
+<script src="{% static 'js/components/map.js' %}" defer></script>
+<script src="{% static 'js/collector/account_offers.js' %}" defer></script>
+{% endblock %}

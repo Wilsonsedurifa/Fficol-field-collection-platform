@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }} | FiCol Back Office{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/backoffice/admin.css' %}">
+<link rel="stylesheet" href="{% static 'css/backoffice/portal.css' %}">
+{% endblock %}
+{% block sidebar %}{% include "backoffice/components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "backoffice/components/navbar.html" %}{% endblock %}
+{% block content %}
+<main id="bo-content" class="bo-content" tabindex="-1">
+  <div class="bo-page">
+    {% if messages %}
+      <div class="bo-messages" aria-live="polite">
+        {% for message in messages %}
+          <p role="status" class="bo-notice bo-notice--{{ message.tags|default:'info' }}">{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if review_error %}
+      <p role="alert" class="bo-error">{{ review_error }}</p>
+    {% endif %}
+    {% block backoffice_content %}{% endblock %}
+  </div>
+</main>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/backoffice/navigation.js' %}" defer></script>{% endblock %}

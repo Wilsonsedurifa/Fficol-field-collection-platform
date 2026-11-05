@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static tz %}
+
+{% block title %}Profile | FiCol{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/collector/profile.css' %}">
+{% endblock %}
+
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Profile" %}{% endblock %}
+
+{% block content %}
+{% timezone "Asia/Manila" %}
+<main class="profile-page" aria-label="Collector profile details">
+  <header class="profile-header">
+    <div class="profile-avatar-wrap" aria-hidden="true">
+      <span class="profile-avatar-initial">{{ request.user.first_name|first|default:request.user.username|first|upper }}</span>
+    </div>
+    <div class="profile-header-meta">
+      <h1 class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</h1>
+      <p class="profile-role">Field Collector &bull; FiCol Operations</p>
+    </div>
+  </header>
+
+  <div class="profile-grid">
+    <!-- Account Information Card -->
+    <section class="profile-card" aria-labelledby="heading-account-info">
+      <h2 id="heading-account-info" class="card-title">Account Information</h2>
+      <dl class="profile-data-list">
+        <div class="profile-data-item">
+          <dt>Display name</dt>
+          <dd>{{ request.user.get_full_name|default:request.user.username }}</dd>
+        </div>
+        <div class="profile-data-item">
+          <dt>Username</dt>
+          <dd>{{ request.user.username }}</dd>
+        </div>
+        <div class="profile-data-item">
+          <dt>Email address</dt>
+          <dd>{{ request.user.email|default:"Not provided" }}</dd>
+        </div>
+        <div class="profile-data-item">
+          <dt>Approval status</dt>
+          <dd>
+            <span class="status-pill status-approved">
+              {{ collector_profile.get_approval_status_display }}
+            </span>
+          </dd>
+        </div>
+        <div class="profile-data-item">
+          <dt>Approval date</dt>
+          <dd>
+            {% if collector_profile.approved_at %}
+              {{ collector_profile.approved_at|date:"d M Y, g:i A" }}
+            {% else %}
+              Not available
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Field Operations & Availability Card -->
+    <section class="profile-card" aria-labelledby="heading-field-ops">
+      <h2 id="heading-field-ops" class="card-title">Field Operations</h2>
+      <dl class="profile-data-list">
+        <div class="profile-data-item">
+          <dt>Current availability</dt>
+          <dd>
+            <span class="status-pill status-{{ collector_profile.availability }}">
+              {{ collector_profile.get_availability_display }}
+            </span>
+          </dd>
+        </div>
+        <div class="profile-data-item">
+          <dt>Matching radius</dt>
+          <dd>{{ collector_profile.matching_radius_m }} meters ({{ collector_profile.matching_radius_m|floatformat:0 }} m)</dd>
+        </div>
+      </dl>
+
+      <div class="profile-info-banner">
+        <h3 class="info-banner-title">Managing Availability</h3>
+        <p>Availability is changed on <a href="{% url 'assignments:account_offers' %}" class="profile-link">Account Offers</a>. Toggle your status online or offline when you are ready to receive and accept nearby collection assignments.</p>
+      </div>
+
+      <div class="profile-info-banner admin-banner">
+        <h3 class="info-banner-title">Administrative Management</h3>
+        <p>Approval status, service coverage, matching radius, and client access are managed by Back Office administrators. If your assignments or coverage require changes, please contact your administrator.</p>
+      </div>
+    </section>
+
+    <!-- Active Client Access Card -->
+    <section class="profile-card full-width" aria-labelledby="heading-client-access">
+      <h2 id="heading-client-access" class="card-title">Active Client Access</h2>
+      <p class="card-desc">You can only view offers and service accounts for clients with approved active access.</p>
+
+      {% if client_accesses %}
+        <ul class="client-access-list" aria-label="Clients with approved access">
+          {% for access in client_accesses %}
+            <li class="client-access-item">
+              <div class="client-access-icon" aria-hidden="true">C</div>
+              <div class="client-access-details">
+                <span class="client-name">{{ access.client.name }}</span>
+                <span class="client-code">Client code: {{ access.client.code }}</span>
+              </div>
+              <span class="client-status-badge">Active access</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="profile-empty-state">
+          <p>No active client access has been granted yet. Contact your Back Office administrator to assign clients.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</main>
+{% endtimezone %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>
+{% endblock %}

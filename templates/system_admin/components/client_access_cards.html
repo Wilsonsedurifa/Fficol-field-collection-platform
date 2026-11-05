@@ -1,0 +1,21 @@
+<fieldset class="sa-fieldset" data-client-section>
+  <legend class="sa-legend">Active Client Access Scope</legend>
+  <p class="sa-fieldset-desc">Select client organizations this user is authorized to view and handle.</p>
+  {% if form.client_accesses.field.choices|length > 8 %}
+  <div class="sa-form-group" hidden data-client-search-wrapper>
+    <label class="sa-label" for="client-search">Search clients</label>
+    <input class="sa-input" type="search" id="client-search" placeholder="Filter clients by name or code" data-client-search>
+    <p class="sa-help-text">Filtering keeps selected clients checked.</p>
+  </div>
+  {% endif %}
+  <div class="perm-grid">
+    {% for value, label in form.client_accesses.field.choices %}
+    <label class="perm-card" for="client-{{ value }}" data-client-card>
+      <input type="checkbox" id="client-{{ value }}" name="client_accesses" value="{{ value }}" {% if value in form.client_accesses.value %}checked{% endif %}>
+      <span><strong>{{ label }}</strong></span>
+    </label>
+    {% empty %}<p class="sa-text-muted">No active clients available in the system.</p>{% endfor %}
+  </div>
+  <p class="sa-text-muted" data-client-empty hidden>No clients match your search.</p>
+  {% for error in form.client_accesses.errors %}<p class="sa-field-error" role="alert">{{ error }}</p>{% endfor %}
+</fieldset>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load tz %}
+{% block title %}Account status | FiCol{% endblock %}
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Account status" %}{% endblock %}
+{% block content %}
+{% timezone "Asia/Manila" %}
+<main>
+  <h1>{{ assignment.account.reference }}</h1>
+  <p>Account status: {{ assignment.account.get_status_display }}</p>
+  <p>This account is read-only. Field actions are unavailable.</p>
+  <a href="{% url 'assignments:my_accounts' %}">Back to My Accounts</a>
+</main>
+{% endtimezone %}
+{% endblock %}

@@ -1,0 +1,21 @@
+Customer Name,Account No,Principal,Balance,Phone,Address,Barangay,City,Latitude,Longitude,Due Date,Notes
+Juan Dela Cruz,ACC-PH-001,25000.00,28500.00,09171234567,123 Caruncho Ave,San Nicolas,Pasig,14.5585,121.0820,2026-11-15,60 days overdue. Ready for field visit.
+Maria Lourdes Santos,ACC-PH-002,15000.00,16800.00,09289876543,45 Commonwealth Ave,Batasan Hills,Quezon City,,,2026-11-20,Promised partial payment via GCash. Auto-geocoded address.
+Pedro Reyes,ACC-PH-003,50000.00,54200.00,09395551234,Block 5 Lot 12 Acacia St,Pinagbuhatan,Pasig,14.5521,121.0965,2026-11-25,Business loan default. Sari-sari store owner.
+Elena Bautista,ACC-PH-004,32000.00,35400.00,09187778899,78 General Luna St,Tuktukan,Taguig,14.5260,121.0720,2026-11-28,House near barangay hall. Direct GPS coordinates provided.
+Ricardo Dalisay,ACC-PH-005,18500.00,20100.00,09081112233,204 Boni Ave,Plainview,Mandaluyong,,,2026-12-05,Commercial tricycle loan. Auto-geocoded address.
+Maritess Alcantara,ACC-PH-006,42000.00,46300.00,09192223344,15 Shaw Blvd,San Antonio,Pasig,14.5824,121.0610,2026-11-18,Condo unit near Kapitolyo. Requires gate pass.
+Arnel Mendoza,ACC-PH-007,22000.00,24800.00,09273334455,88 Dr. Sixto Antonio Ave,Rosario,Pasig,14.5891,121.0880,2026-11-22,Borrower works night shift. Best visited afternoon.
+Rowena Del Rosario,ACC-PH-008,12500.00,13900.00,09384445566,Block 18 Lot 4 Phase 3 Greenwoods,San Andres,Cainta,,,2026-11-30,Subdivision home. Auto-geocoded address.
+Christopher Ramos,ACC-PH-009,65000.00,71200.00,09175556677,52 Sen. Gil Puyat Ave,Bel-Air,Makati,14.5594,121.0267,2026-12-02,Corporate salary loan default. Office address nearby.
+Jocelyn Tan,ACC-PH-010,28000.00,31100.00,09296667788,142 Dr. A. Santos Ave,San Dionisio,Paranaque,,,2026-12-08,Commercial stall in public market. Auto-geocoded.
+Danilo Bautista,ACC-PH-011,38500.00,42000.00,09477778899,74 Ortigas Ave Ext,Santo Domingo,Cainta,14.5880,121.1215,2026-11-19,Auto loan past due. Visible along highway.
+Cherrylyn Mercado,ACC-PH-012,19000.00,21500.00,09188889900,108 Sumulong Highway,Mayamot,Antipolo,,,2026-11-27,Bakery owner. Auto-geocoded address.
+Kenneth Bryan Lim,ACC-PH-013,85000.00,94200.00,09269990011,26th St corner 5th Ave,Fort Bonifacio,Taguig,14.5492,121.0475,2026-12-10,BGC high-value personal loan. Direct coordinates.
+Grace Villanueva,ACC-PH-014,14000.00,15700.00,09301112233,55 Aguinaldo Highway,Panapaan,Bacoor,,,2026-12-01,House near Talaba intersection. Auto-geocoded.
+Ferdinand Castro,ACC-PH-015,31000.00,34600.00,09152223344,32 Old National Road,Balibago,Santa Rosa,,,2026-12-03,Near commercial complex. Auto-geocoded.
+Lorna Manalo,ACC-PH-016,16500.00,18200.00,09223334455,90 M.L. Quezon St,San Roque,Marikina,14.6360,121.0990,2026-11-21,Shoe workshop owner. Direct GPS coordinates.
+Ramon Gutierrez,ACC-PH-017,48000.00,52900.00,09174445566,12 Samson Road,Sangandaan,Caloocan,,,2026-11-29,Hardware store borrower. Auto-geocoded.
+Teresa Magpantay,ACC-PH-018,23500.00,26100.00,09285556677,65 J.P. Rizal St,Poblacion,Makati,14.5678,121.0312,2026-12-04,Direct GPS coordinates near Makati city hall.
+Eduardo Soriano,ACC-PH-019,27000.00,29800.00,09396667788,140 Quirino Highway,Novaliches,Quezon City,,,2026-12-06,Auto-geocoded address. Sari-sari store location.
+Annalyn Panganiban,ACC-PH-020,36000.00,39900.00,09497778899,28 Alabang-Zapote Road,Almanza Uno,Las Pinas,,,2026-12-12,Residential townhome. Auto-geocoded.

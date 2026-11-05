@@ -1,0 +1,186 @@
+<!-- FiCol Top Navigation Bar Component -->
+<!-- Unified Mobile Header Bar (Visible on mobile viewports < 900px) -->
+<div class="mobile-header-bar">
+  <button type="button" 
+          id="mobile-menu-trigger" 
+          class="mobile-menu-btn" 
+          aria-label="Open navigation menu" 
+          aria-expanded="false" 
+          aria-controls="app-sidebar">
+    <svg class="mobile-menu-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/></svg>
+    <span>Menu</span>
+  </button>
+
+  <div class="mobile-brand-title">
+    <span class="brand-mark-sm" aria-hidden="true">F</span>
+    <strong>{{ navbar_title|default:"Dashboard" }}</strong>
+  </div>
+
+  <!-- Mobile Notifications Dropdown -->
+  <details class="top-notif-dropdown">
+    <summary class="top-notif-btn"
+             aria-label="Notifications{% if unread_notifications_count > 0 %} ({{ unread_notifications_count }} unread){% endif %}">
+      <svg class="top-notif-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a5 5 0 00-10 0c0 5-2 6-2 6h14s-2-1-2-6"/><path d="M8.5 16.5a1.5 1.5 0 003 0"/></svg>
+      <span>Notifications</span>{% if unread_notifications_count > 0 %} <span class="top-notif-count">({{ unread_notifications_count }})</span>{% endif %}
+    </summary>
+    <div class="top-notif-menu">
+      {% if notification_dropdown_offer_summary %}
+      <form method="post" action="{% url 'notifications:open_offers' %}" class="top-notif-item-form">
+        {% csrf_token %}
+        <button type="submit" class="top-notif-item-btn" aria-label="View {{ notification_dropdown_offer_summary.count }} available account offer{{ notification_dropdown_offer_summary.count|pluralize }}: View your offers before they expire.">
+          <div class="top-notif-item-meta">
+            <span class="top-notif-type">Offer</span>
+            <span class="top-notif-state">Unread</span>
+          </div>
+          <div class="top-notif-item-title">{{ notification_dropdown_offer_summary.count }} account offer{{ notification_dropdown_offer_summary.count|pluralize }} {% if notification_dropdown_offer_summary.count == 1 %}is{% else %}are{% endif %} available</div>
+          <div class="top-notif-item-desc">View your offers before they expire.</div>
+        </button>
+      </form>
+      {% endif %}
+
+      {% for item in notification_dropdown_items %}
+      <form method="post" action="{% url 'notifications:open' item.notification.pk %}" class="top-notif-item-form">
+        {% csrf_token %}
+        <button type="submit" class="top-notif-item-btn" aria-label="{% if item.action_url %}{{ item.action_label }}: {{ item.notification.message }}{% else %}Mark as read: {{ item.notification.message }}{% endif %}">
+          <div class="top-notif-item-meta">
+            <span class="top-notif-type">{{ item.notification.get_kind_display }}</span>
+            <span class="top-notif-state">Unread</span>
+            <time class="top-notif-time" datetime="{{ item.notification.created_at|date:'c' }}">
+              {{ item.notification.created_at|date:"d M, g:i A" }}
+            </time>
+          </div>
+          <div class="top-notif-item-msg">{{ item.notification.message }}</div>
+        </button>
+      </form>
+      {% endfor %}
+
+      {% if not notification_dropdown_offer_summary and not notification_dropdown_items %}
+      <div class="top-notif-empty">No unread notifications</div>
+      {% endif %}
+
+      <div class="top-notif-footer">
+        <a href="{% url 'notifications:inbox' %}" class="top-notif-footer-link">Show all notifications</a>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- Desktop Top Navigation Bar (Visible on viewports >= 900px) -->
+<header class="top-navbar" aria-label="Main navigation bar">
+  <!-- Left: Page Title & Breadcrumb -->
+  <div class="top-navbar-left">
+    <h1 class="top-page-title">{{ navbar_title|default:"Dashboard" }}</h1>
+    <span class="top-breadcrumb-tag">Field Collections</span>
+  </div>
+
+  <!-- Right: Notifications & Profile Disclosure Dropdown -->
+  <div class="top-navbar-right">
+
+    <!-- Notifications Dropdown -->
+    <details class="top-notif-dropdown">
+      <summary class="top-notif-btn"
+               aria-label="Notifications{% if unread_notifications_count > 0 %} ({{ unread_notifications_count }} unread){% endif %}">
+        <svg class="top-notif-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a5 5 0 00-10 0c0 5-2 6-2 6h14s-2-1-2-6"/><path d="M8.5 16.5a1.5 1.5 0 003 0"/></svg>
+        <span>Notifications</span>{% if unread_notifications_count > 0 %} <span class="top-notif-count">({{ unread_notifications_count }})</span>{% endif %}
+      </summary>
+      <div class="top-notif-menu">
+        {% if notification_dropdown_offer_summary %}
+        <form method="post" action="{% url 'notifications:open_offers' %}" class="top-notif-item-form">
+          {% csrf_token %}
+          <button type="submit" class="top-notif-item-btn" aria-label="View {{ notification_dropdown_offer_summary.count }} available account offer{{ notification_dropdown_offer_summary.count|pluralize }}: View your offers before they expire.">
+            <div class="top-notif-item-meta">
+              <span class="top-notif-type">Offer</span>
+              <span class="top-notif-state">Unread</span>
+            </div>
+            <div class="top-notif-item-title">{{ notification_dropdown_offer_summary.count }} account offer{{ notification_dropdown_offer_summary.count|pluralize }} {% if notification_dropdown_offer_summary.count == 1 %}is{% else %}are{% endif %} available</div>
+            <div class="top-notif-item-desc">View your offers before they expire.</div>
+          </button>
+        </form>
+        {% endif %}
+
+        {% for item in notification_dropdown_items %}
+        <form method="post" action="{% url 'notifications:open' item.notification.pk %}" class="top-notif-item-form">
+          {% csrf_token %}
+          <button type="submit" class="top-notif-item-btn" aria-label="{% if item.action_url %}{{ item.action_label }}: {{ item.notification.message }}{% else %}Mark as read: {{ item.notification.message }}{% endif %}">
+            <div class="top-notif-item-meta">
+              <span class="top-notif-type">{{ item.notification.get_kind_display }}</span>
+              <span class="top-notif-state">Unread</span>
+              <time class="top-notif-time" datetime="{{ item.notification.created_at|date:'c' }}">
+                {{ item.notification.created_at|date:"d M, g:i A" }}
+              </time>
+            </div>
+            <div class="top-notif-item-msg">{{ item.notification.message }}</div>
+          </button>
+        </form>
+        {% endfor %}
+
+        {% if not notification_dropdown_offer_summary and not notification_dropdown_items %}
+        <div class="top-notif-empty">No unread notifications</div>
+        {% endif %}
+
+        <div class="top-notif-footer">
+          <a href="{% url 'notifications:inbox' %}" class="top-notif-footer-link">Show all notifications</a>
+        </div>
+      </div>
+    </details>
+
+    <!-- Collector Profile Disclosure Dropdown -->
+    <div class="profile-dropdown-wrapper">
+      <button type="button" 
+              id="profile-menu-trigger" 
+              class="profile-menu-trigger" 
+              aria-expanded="false" 
+              aria-controls="profile-dropdown-menu"
+              aria-label="Collector account menu">
+        <div class="top-avatar" aria-hidden="true">
+          {{ request.user.first_name|first|default:request.user.username|first|upper }}
+        </div>
+        <div class="top-user-meta">
+          <div class="top-user-name" title="{{ request.user.get_full_name|default:request.user.username }}">
+            {{ request.user.get_full_name|default:request.user.username }}
+          </div>
+          <div class="top-user-role">Collector</div>
+        </div>
+        <svg class="top-chevron-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 8 10 12 14 8"/></svg>
+      </button>
+
+      <!-- Profile Disclosure Menu Card (Standard Tab navigation, hidden when closed) -->
+      <div id="profile-dropdown-menu" 
+           class="profile-dropdown-menu" 
+           hidden>
+        <div class="dropdown-header-card">
+          <div class="dropdown-collector-name">
+            {{ request.user.get_full_name|default:request.user.username }}
+          </div>
+          <div class="dropdown-collector-id">
+            Collector &bull; {{ collector_profile.get_approval_status_display|default:collector_profile.approval_status|title }}
+          </div>
+        </div>
+
+        <!-- My Profile -->
+        <a href="{% url 'collector_profile' %}" class="dropdown-menu-item">
+          <svg class="dropdown-item-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="6.5" r="3.5"/><path d="M3.5 17a6.5 6.5 0 0113 0"/></svg>
+          <span>My Profile</span>
+        </a>
+
+        <!-- Help & Support -->
+        <a href="{% url 'collector_help' %}" class="dropdown-menu-item">
+          <svg class="dropdown-item-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M7.8 8a2.2 2.2 0 014.4 0c0 1.5-2.2 2-2.2 3.2"/><circle cx="10" cy="14.5" r="0.75" fill="currentColor"/></svg>
+          <span>Help &amp; Support</span>
+        </a>
+
+        <div class="dropdown-divider" aria-hidden="true"></div>
+
+        <!-- Sign Out (Real POST form with CSRF protection) -->
+        <form action="{% url 'logout' %}" method="post" class="dropdown-signout-form">
+          {% csrf_token %}
+          <button type="submit" class="dropdown-menu-item dropdown-signout-btn" aria-label="Sign out of FiCol">
+            <svg class="dropdown-item-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 16.5H4a1.5 1.5 0 01-1.5-1.5V5A1.5 1.5 0 014 3.5h3.5"/><polyline points="13 13.5 16.5 10 13 6.5"/><line x1="7.5" y1="10" x2="16.5" y2="10"/></svg>
+            <span>Sign Out</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</header>

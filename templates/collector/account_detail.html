@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static tz %}
+{% block title %}Assigned Account | FiCol{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+<link rel="stylesheet" href="{% static 'css/collector/account_detail.css' %}">
+{% endblock %}
+{% block sidebar %}{% include "components/sidebar.html" %}{% endblock %}
+{% block navbar %}{% include "components/navbar.html" with navbar_title="Assigned Account" %}{% endblock %}
+{% block content %}{% timezone "Asia/Manila" %}
+<main class="detail-page" aria-label="Assigned account details">
+  <a class="back-link" href="{% url 'assignments:my_accounts' %}">Back to My Accounts</a>
+  {% include "information/includes/card.html" %}
+  {% if messages %}
+  <div style="margin-bottom: 16px;">
+    {% for message in messages %}
+    <p class="visit-feedback{% if message.tags == 'error' %} is-error{% endif %}" role="status">{{ message }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="detail-grid">
+    <section class="detail-card" aria-labelledby="account-reference">
+      <span class="assigned-pill">Assigned to you</span><h2 id="account-reference">{{ detail.reference }}</h2><p class="customer-name">{{ detail.customer_name }}</p><p class="detail-client">{{ assignment.account.client.name }}</p>
+      <div class="detail-balance"><span>Outstanding balance</span><strong>{{ assignment.account.currency }} {{ assignment.account.balance_snapshot|floatformat:2 }}</strong><small>Last updated {{ assignment.account.balance_as_of|date:"d M Y, g:i A" }}</small></div>
+      <dl><dt>Collection address</dt><dd>{{ detail.address }}</dd><dt>Account status</dt><dd>{{ assignment.account.get_status_display }}</dd><dt>Earning terms agreed on acceptance</dt><dd>{{ detail.commission_terms }}</dd><dt>Assigned on</dt><dd>{{ assignment.created_at|date:"d M Y, g:i A" }}</dd><dt>First action due</dt><dd>{{ assignment.first_action_due_at|date:"d M Y, g:i A" }}</dd>{% if assignment.next_action_due_at %}<dt>Next action due</dt><dd>{{ assignment.next_action_due_at|date:"d M Y, g:i A" }}</dd>{% endif %}</dl>
+      <p class="detail-note">Times are shown in Philippine time. The balance reflects the latest supplied account information.</p>
+      <a class="detail-directions" href="{{ detail.directions_url }}" target="_blank" rel="noopener noreferrer">Get Directions in Google Maps</a>
+      <p>Directions open in a new tab using the saved collection pin. Opening directions does not record a visit.</p>
+    </section>
+    <section class="detail-map-card" aria-labelledby="collection-location-heading"><h3 id="collection-location-heading">Collection location</h3><div id="account-map" class="account-map" aria-label="Map of the assigned collection location"></div><p id="detail-map-message" role="status" aria-live="polite">Verified collection pin. If the location is incorrect, contact your supervisor.</p></section>
+  </div>
+  {{ map_config|json_script:"account-map-config" }}
+  <section class="visit-card" aria-labelledby="contact-attempt-heading">
+    <h2 id="contact-attempt-heading">Contact attempt</h2>
+    <p>Log a call, SMS, or email attempt. This records an internal history entry only and never sends an external message.</p>
+    <p id="contact-attempt-feedback" class="visit-feedback" role="status" aria-live="polite" hidden></p>
+    <form id="contact-attempt-form" method="post" action="{{ contact_attempt_url }}">
+      {% csrf_token %}
+      <div class="visit-fields">
+        <div>
+          <label for="contact-attempt-method">Method</label>
+          <select id="contact-attempt-method" name="kind" required>
+            <option value="">Choose a method</option>
+            {% for value, label in contact_attempt_methods %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="contact-attempt-outcome">Outcome</label>
+          <select id="contact-attempt-outcome" name="outcome" required>
+            <option value="">Choose an outcome</option>
+            {% for value, label in contact_attempt_outcomes %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <label for="contact-attempt-notes">Notes <span class="field-hint">Required details about the contact attempt (up to 5,000 characters)</span></label>
+      <textarea id="contact-attempt-notes" name="notes" maxlength="5000" rows="3" required placeholder="Add notes about the contact attempt"></textarea>
+      <div class="visit-buttons">
+        <button id="save-contact-attempt-btn" class="visit-button primary" type="submit">Save contact attempt</button>
+      </div>
+    </form>
+    <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+      <h3 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 14px 0 8px;">Recent contact attempts</h3>
+      <p class="field-hint">Showing the latest 20 contact attempts for this assignment.</p>
+      <div id="contact-attempt-history-list">
+        {% for attempt in contact_attempt_history %}
+        <article class="visit-history-item">
+          <div class="visit-history-heading">
+            <strong>
+              {% if attempt.kind == 'phone' %}Call{% elif attempt.kind == 'sms' %}SMS{% elif attempt.kind == 'email' %}Email{% else %}{{ attempt.get_kind_display }}{% endif %} · {{ attempt.get_outcome_display }}
+            </strong>
+            <span class="visit-review">Attempt</span>
+          </div>
+          <p>{{ attempt.occurred_at|date:"d M Y, g:i A" }} · Philippine time</p>
+          <p class="visit-notes-copy">{{ attempt.notes }}</p>
+        </article>
+        {% empty %}
+        <p id="no-contact-attempts-msg">No contact attempts recorded yet for this assignment.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  <section class="visit-card" aria-labelledby="visit-heading">
+    <h2 id="visit-heading">Collection visit</h2>
+    <p>Start when you arrive. Location is supporting evidence; it does not prove customer contact.</p>
+    <p id="visit-feedback" class="visit-feedback" role="status" aria-live="polite">{% if visit_config.ongoing %}Your ongoing visit is ready to resume.{% else %}No visit is currently in progress.{% endif %}</p>
+    <div id="visit-wait-panel"{% if visit_config.ongoing or visit_gate.allowed %} hidden{% endif %}><p id="visit-wait-message">{% if visit_gate.state == 'waiting' %}Your next visit is scheduled for {{ revisit_due_at|date:"d M Y, g:i A" }} (Philippine time). Reload at that time to start.{% else %}{% if visit_gate.state == 'another_visit' %}Finish or cancel your current visit before starting work on another account.{% elif visit_gate.state == 'requested' %}Your follow-up request is awaiting a schedule from Back Office.{% elif visit_gate.state == 'overdue' %}The follow-up deadline has passed. Contact Back Office before another visit.{% else %}Your visit is submitted. Request another visit for Back Office to schedule.{% endif %}{% endif %}</p></div>
+    <form id="revisit-form"{% if visit_config.ongoing or visit_gate.state != 'schedule_required' %} hidden{% endif %}><label for="revisit-date">Suggested visit date and time (Philippine time)</label><input id="revisit-date" type="datetime-local" required><div class="visit-buttons"><button id="schedule-revisit" class="visit-button primary" type="submit">Request next visit</button></div></form>
+    <div id="visit-start-panel"{% if visit_config.ongoing or not visit_gate.allowed %} hidden{% endif %}>
+      <label for="visit-location-reason">Location explanation <span class="field-hint">Required if location is unavailable or unsuitable</span></label>
+      <textarea id="visit-location-reason" maxlength="500" rows="2" placeholder="Explain any location issue, if needed"></textarea>
+      <div class="visit-buttons"><button id="start-visit" class="visit-button primary" type="button">Start Visit</button><button id="start-without-location" class="visit-button" type="button">Start without location</button></div>
+    </div>
+    <form id="visit-form"{% if not visit_config.ongoing %} hidden{% endif %}>
+      {% csrf_token %}
+      <p id="visit-started" class="visit-evidence"></p>
+      <p id="visit-location-summary" class="visit-evidence"></p>
+      <label for="visit-outcome">Visit outcome</label><select id="visit-outcome" name="outcome" required><option value="">Choose an outcome</option>{% for value,label in visit_outcomes %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+      <label for="visit-notes">Notes <span id="notes-hint" class="field-hint">Add useful details about the visit</span></label><textarea id="visit-notes" name="notes" maxlength="5000" rows="4"></textarea><p class="field-hint">Notes and outcomes are saved when you submit the visit.</p>
+      <fieldset id="visit-promise" hidden disabled><legend>Customer's promise to pay</legend><div class="visit-fields"><div><label for="promise-amount">Amount ({{ assignment.account.currency }})</label><input id="promise-amount" type="number" inputmode="decimal" min="0.01" max="999999999999.99" step="0.01" required></div><div><label for="promise-date">Agreed date (Philippine time)</label><input id="promise-date" type="date" required></div></div><p class="field-hint">A promise is a commitment, not a verified payment.</p></fieldset>
+      <label class="visit-checkbox"><input id="schedule-followup" type="checkbox"> Request a follow-up</label>
+      <fieldset id="visit-followup" hidden disabled><legend>Suggested next visit (subject to Back Office scheduling)</legend><div class="visit-fields"><div><label for="followup-kind">Action</label><select id="followup-kind" required><option value="revisit">Revisit</option></select></div><div><label for="followup-date">Date and time (Philippine time)</label><input id="followup-date" type="datetime-local" required></div></div></fieldset>
+      <!-- Evidence Photo Camera UI -->
+      <div class="evidence-photo-section" style="margin: 14px 0; padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
+        <label style="display: block; font-weight: 600; font-size: 13px; color: #1e293b; margin-bottom: 4px;">Photo Evidence (Optional)</label>
+        <p id="evidence-photo-hint" class="field-hint" style="margin-bottom: 8px;">Take a clear photo of the house, borrower, or demand letter. Optimized for offline storage.</p>
+        <input id="evidence-camera-input" type="file" accept="image/*" capture="environment" style="display: none;">
+        <button id="evidence-camera-btn" type="button" class="visit-button" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 13px;">
+          📸 Take Photo with Camera
+        </button>
+        <div id="evidence-photo-preview"></div>
+      </div>
+      <p class="field-hint">Submitted reports go to Back Office review. Review does not verify payment, award commission or close the account.</p>
+      <div class="visit-buttons"><button id="submit-visit" class="visit-button primary" type="submit">Submit Visit</button><button id="cancel-visit-open" class="visit-button" type="button">Cancel Visit</button></div>
+    </form>
+    <form id="visit-cancel-form" hidden><label for="visit-cancel-reason">Why are you cancelling this visit?</label><textarea id="visit-cancel-reason" maxlength="500" rows="2" required></textarea><div class="visit-buttons"><button id="cancel-visit-confirm" class="visit-button" type="submit">Confirm cancellation</button><button id="cancel-visit-back" class="visit-button" type="button">Keep visit</button></div></form>
+    <a id="visit-reload" class="visit-button" href="" hidden>Reload account and visit history</a>
+    <noscript><p>Enable JavaScript to start and submit a visit.</p></noscript>
+  </section>
+  {% include "collector/components/payment_form.html" %}
+  <section class="visit-card" aria-labelledby="payment-history-heading">
+    <h2 id="payment-history-heading">Reported customer payments</h2>
+    <p class="field-hint">Showing reported direct payments for this assignment. Payments undergo Back Office verification.</p>
+    {% for pmt in payment_history %}
+    <article class="visit-history-item">
+      <div class="visit-history-heading">
+        <strong>{{ pmt.account.currency }} {{ pmt.amount|floatformat:2 }} · {{ pmt.get_method_display }}</strong>
+        <span class="visit-review">{% if pmt.status == 'verified' %}Verified{% elif pmt.status == 'rejected' %}Rejected{% else %}Pending verification{% endif %}</span>
+      </div>
+      <p>Reported payment time {{ pmt.paid_at|date:"d M Y, g:i A" }}{% if pmt.reference %} · Ref: {{ pmt.reference }}{% endif %}</p>
+      {% if pmt.notes %}<p class="visit-notes-copy">{{ pmt.notes }}</p>{% endif %}
+      {% for doc in pmt.documents.all %}
+      <p><a href="{% url 'download_document' doc.pk %}" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; text-decoration: underline;">View proof: {{ doc.original_name }} ({{ doc.size_bytes|filesizeformat }})</a></p>
+      {% endfor %}
+      {% if pmt.rejection_reason %}<p style="color: #b91c1c;">Rejection note: {{ pmt.rejection_reason }}</p>{% endif %}
+    </article>
+    {% empty %}
+    <p>No customer payments reported yet for this assignment.</p>
+    {% endfor %}
+  </section>
+  <section class="visit-card" aria-labelledby="followups-heading"><h2 id="followups-heading">Follow-up requests and schedules</h2>{% for task in pending_followups %}<article class="visit-history-item"><strong>{{ task.get_kind_display }}</strong><p>{{ task.due_at|date:"d M Y, g:i A" }} · Philippine time</p></article>{% empty %}<p>No follow-up requests or schedules for this assignment.</p>{% endfor %}</section>
+  <section class="visit-card" aria-labelledby="history-heading"><h2 id="history-heading">Visit history</h2><p class="field-hint">Showing the latest 20 finished or cancelled visits for this assignment.</p>{% for activity in visit_history %}<article class="visit-history-item"><div class="visit-history-heading"><strong>{% if activity.status == 'cancelled' %}Cancelled visit{% else %}{{ activity.get_outcome_display }}{% endif %}</strong><span class="visit-review">{% if activity.status == 'cancelled' %}Cancelled{% elif activity.review_status == 'not_required' %}Submitted{% else %}{{ activity.get_review_status_display }} review{% endif %}</span></div><p>Started {{ activity.occurred_at|date:"d M Y, g:i A" }} · Ended {{ activity.ended_at|date:"d M Y, g:i A" }}</p>{% if activity.distance_m != None %}<p>{{ activity.distance_m|floatformat:0 }} m from collection pin · GPS accuracy ±{{ activity.accuracy_m|floatformat:0 }} m</p>{% endif %}{% if activity.location_issue_reason %}<p>Location explanation: {{ activity.location_issue_reason }}</p>{% endif %}{% if activity.notes %}<p class="visit-notes-copy">{{ activity.notes }}</p>{% endif %}{% if activity.cancel_reason %}<p>Reason: {{ activity.cancel_reason }}</p>{% endif %}{% for promise in activity.promises.all %}<p>Promise: {{ assignment.account.currency }} {{ promise.amount|floatformat:2 }} by {{ promise.due_date|date:"d M Y" }} · {{ promise.get_status_display }}</p>{% endfor %}{% for task in activity.follow_up_tasks.all %}<p>{{ task.get_kind_display }}: {{ task.due_at|date:"d M Y, g:i A" }} · {{ task.get_status_display }}</p>{% endfor %}{% if activity.review_reason %}<p>Review note: {{ activity.review_reason }}</p>{% endif %}</article>{% empty %}<p>No submitted or cancelled visits yet.</p>{% endfor %}</section>
+  <section class="visit-card" aria-labelledby="release-heading">
+    <h2 id="release-heading">Request account release</h2>
+    <p class="field-hint">If you are unable to continue servicing this account, you may request an administrative release. Ownership remains active while your request is pending review.</p>
+
+    {% if pending_release_request %}
+    <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 14px; margin: 14px 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <strong style="color: #92400e; font-size: 14px;">Release request pending Back Office review</strong>
+        <span class="visit-review" style="background: #fef3c7; color: #92400e;">Pending</span>
+      </div>
+      <p style="margin: 8px 0 4px; font-size: 13px; color: #78350f;"><strong>Requested on:</strong> {{ pending_release_request.created_at|date:"d M Y, g:i A" }} (Philippine time)</p>
+      <p style="margin: 0; font-size: 13px; color: #78350f;"><strong>Reason provided:</strong> {{ pending_release_request.reason }}</p>
+      <p class="field-hint" style="margin-top: 8px; color: #b45309;">Your assignment and deadlines remain active until a Back Office administrator decides your request. You may continue normal visits or payments in the meantime.</p>
+    </div>
+    {% elif can_request_release %}
+    <form method="post" action="{{ release_request_url }}" class="release-request-form" style="margin-top: 14px;">
+      {% csrf_token %}
+      <input type="hidden" name="event_id" value="{{ release_event_id }}">
+      <label for="release-reason">Reason for requesting release <span class="field-hint">Explain clearly why you cannot service this account (required)</span></label>
+      <textarea id="release-reason" name="reason" maxlength="5000" rows="3" required placeholder="Provide an explanation for the Back Office to review"></textarea>
+      <p class="field-hint">Submitting a request does not immediately end ownership or refund rolling acceptance capacity. Back Office review is required.</p>
+      <div class="visit-buttons">
+        <button class="visit-button primary" type="submit">Submit release request</button>
+      </div>
+    </form>
+    {% elif not allow_collector_release %}
+    <p class="field-hint" style="margin-top: 12px; color: #64748b;">Client policy does not permit collector-initiated release requests for this account. If you cannot service this account, contact your supervisor directly.</p>
+    {% endif %}
+
+    {% if release_history %}
+    <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+      <h3 style="font-size: 14px; font-weight: 700; color: #334155; margin: 14px 0 8px;">Release request history</h3>
+      {% for req in release_history %}
+      <article class="visit-history-item">
+        <div class="visit-history-heading">
+          <strong>Request on {{ req.created_at|date:"d M Y, g:i A" }}</strong>
+          <span class="visit-review" {% if req.status == 'approved' %}style="background: #ecfdf5; color: #065f46;"{% elif req.status == 'rejected' %}style="background: #fff1f2; color: #9f1239;"{% elif req.status == 'superseded' %}style="background: #f1f5f9; color: #475569;"{% endif %}>
+            {{ req.get_status_display }}
+          </span>
+        </div>
+        <p class="visit-notes-copy" style="margin: 6px 0;">Reason: {{ req.reason }}</p>
+        {% if req.status == 'rejected' and req.review_reason %}
+        <p style="color: #b91c1c; font-size: 13px; margin: 4px 0;">Rejection note: {{ req.review_reason }}</p>
+        {% elif req.status == 'superseded' and req.review_reason %}
+        <p style="color: #475569; font-size: 13px; margin: 4px 0;">Superseded note: {{ req.review_reason }}</p>
+        {% endif %}
+        {% if req.reviewed_at %}
+        <p class="field-hint" style="margin: 4px 0;">{% if req.status == 'superseded' %}Superseded on{% else %}Reviewed on{% endif %} {{ req.reviewed_at|date:"d M Y, g:i A" }}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+  {{ visit_config|json_script:"visit-config" }}
+</main>
+{% endtimezone %}{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+<script src="{% static 'js/components/navbar.js' %}" defer></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous" defer></script>
+<script src="{% static 'js/components/map.js' %}" defer></script>
+<script src="{% static 'js/collector/evidence-camera.js' %}" defer></script>
+<script src="{% static 'js/collector/account_detail.js' %}" defer></script>
+{% endblock %}

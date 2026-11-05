@@ -1,0 +1,196 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<div style="margin-bottom: 20px;">
+  <a href="{% url 'backoffice_assignments' %}" class="bo-schedule-button" style="text-decoration: none; font-size: 13px;">Back to Account Assignments</a>
+</div>
+
+{% if assignment_error %}
+<div class="bo-error" role="alert" style="margin-bottom: 20px;">
+  <strong>Assignment error:</strong> {{ assignment_error }}
+</div>
+{% endif %}
+
+<div class="bo-release-list">
+  <!-- Account Summary Card -->
+  <article class="bo-release-card">
+    <div class="bo-release-card-header">
+      <div>
+        <h2 class="bo-release-card-title">{{ account.reference }}</h2>
+        <p class="bo-release-card-subtitle">{{ account.customer.display_name }} · {{ account.client.name }}</p>
+      </div>
+      <div>
+        {% if current_assignment and current_assignment.status == 'active' %}
+        <span class="bo-status-badge is-assigned">Assigned</span>
+        {% else %}
+        <span class="bo-status-badge is-unassigned">Unassigned</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <dl class="bo-release-grid">
+      <div>
+        <dt class="bo-release-field-label">Balance</dt>
+        <dd class="bo-release-field-val is-bold">{{ account.currency }} {{ account.balance_snapshot|floatformat:2 }}</dd>
+      </div>
+      <div>
+        <dt class="bo-release-field-label">Collection address</dt>
+        <dd class="bo-release-field-val">{{ account.collection_address.address_line }}{% if account.collection_address.territory %}, {{ account.collection_address.territory.name }}{% endif %}</dd>
+      </div>
+      <div>
+        <dt class="bo-release-field-label">Address status</dt>
+        <dd class="bo-release-field-val is-bold" style="color: #065f46;">Verified</dd>
+      </div>
+      <div>
+        <dt class="bo-release-field-label">Commission rule</dt>
+        <dd class="bo-release-field-val">{{ account.commission_rule.name }} ({{ account.commission_rule.code }})</dd>
+      </div>
+    </dl>
+  </article>
+
+  <!-- Account Status & Lifecycle Card -->
+  {% if can_change_account_status %}{% include "backoffice/partials/_account_status_card.html" %}{% endif %}
+
+  <!-- Current Ownership State Card -->
+  <article class="bo-release-card">
+    <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 12px; color: var(--text-main, #0f172a);">Current Assignment Status</h3>
+    {% if current_assignment and current_assignment.status == 'active' %}
+    <dl class="bo-release-grid" style="margin-top: 0; padding-top: 0; border-top: none;">
+      <div>
+        <dt class="bo-release-field-label">Active collector</dt>
+        <dd class="bo-release-field-val is-bold">{{ current_assignment.collector.user.get_full_name|default:current_assignment.collector.user.username }}</dd>
+      </div>
+      <div>
+        <dt class="bo-release-field-label">Assigned date</dt>
+        <dd class="bo-release-field-val">{{ current_assignment.created_at|date:"d M Y, g:i A" }}</dd>
+      </div>
+      <div>
+        <dt class="bo-release-field-label">First action deadline</dt>
+        <dd class="bo-release-field-val">{{ current_assignment.first_action_due_at|date:"d M Y, g:i A" }}</dd>
+      </div>
+    </dl>
+    <div style="margin-top: 14px; padding: 12px; background: var(--amber-light, #fffbeb); border: 1px solid var(--amber-border, #fde68a); border-radius: 8px;">
+      <p style="margin: 0; font-size: 13px; color: var(--amber-text, #92400e);">
+        <strong>Note on transfer:</strong> Reassigning this account will transfer active ownership immediately, supersede any pending collector release request, and cancel outstanding follow-ups.
+      </p>
+    </div>
+    {% else %}
+    <p style="margin: 0; font-size: 14px; color: var(--text-muted, #334155);">This account is currently unassigned and ready for manual assignment.</p>
+    {% endif %}
+  </article>
+
+  <!-- Assignment / Transfer Form -->
+  <article class="bo-release-card">
+    <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 8px; color: var(--text-main, #0f172a);">
+      {% if current_assignment %}Transfer Account to Another Collector{% else %}Assign Account to Collector{% endif %}
+    </h3>
+    <p class="bo-description" style="margin-bottom: 16px; font-size: 13px;">
+      Select an approved ordinary collector with active access to <strong>{{ account.client.name }}</strong>. Location distances and observation freshness are advisory.
+    </p>
+
+    {% if has_ongoing_visit %}
+    <p class="bo-decision-warning" style="margin-bottom: 16px;">
+      Assignment / transfer blocked: a visit is currently in progress on this account. The visit must be completed or cancelled before the account can be assigned or transferred.
+    </p>
+    {% endif %}
+
+    <form method="post" action="{% url 'assign_account_form' account.pk %}" class="bo-assignment-form">
+      {% csrf_token %}
+      <input type="hidden" name="event_id" value="{{ event_id }}">
+      <input type="hidden" name="ownership_token" value="{{ ownership_token }}">
+
+      <div style="overflow-x: auto; margin-bottom: 20px;">
+        <table class="bo-collector-table" aria-label="Eligible collectors">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 44px;">Select</th>
+              <th scope="col">Collector</th>
+              <th scope="col">Availability</th>
+              <th scope="col">Active Workload</th>
+              <th scope="col">24h Acceptances</th>
+              <th scope="col">Distance / Location (Advisory)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in collectors %}
+            <tr>
+              <td>
+                <input type="radio" id="col-{{ c.id }}" name="collector_id" value="{{ c.id }}" required {% if entered_collector_id == c.id|stringformat:"s" %}checked{% endif %}>
+              </td>
+              <td>
+                <label for="col-{{ c.id }}" style="font-weight: 650; cursor: pointer;">
+                  {{ c.full_name }} <span style="font-weight: 400; color: var(--text-subtle, #64748b);">({{ c.username }})</span>
+                </label>
+              </td>
+              <td>
+                <span class="bo-status-badge {% if c.availability == 'online' %}is-approved{% else %}is-unassigned{% endif %}" style="padding: 2px 8px; font-size: 11px;">
+                  {{ c.availability|capfirst }}
+                </span>
+              </td>
+              <td>{{ c.workload }} active account{{ c.workload|pluralize }}</td>
+              <td>{{ c.recent_acceptances }} accepted</td>
+              <td>
+                {% if c.distance_km %}
+                <span style="font-weight: 600;">{{ c.distance_km }}</span>
+                <span style="color: var(--text-subtle, #64748b); font-size: 12px;">({{ c.location_captured_at|date:"d M, g:i A" }})</span>
+                {% else %}
+                <span style="color: var(--text-subtle, #64748b);">No GPS fix (Advisory)</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-subtle, #64748b);">
+                No approved ordinary collectors currently hold active access to {{ account.client.name }}.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-bottom: 18px;">
+        <label for="assignment-reason" class="bo-decision-label">Reason for {% if current_assignment %}transfer{% else %}assignment{% endif %} <span style="color: var(--rose, #e11d48); font-size: 12px;">(required)</span></label>
+        <p class="bo-field-hint" style="margin-bottom: 6px;">Recorded in audit history and frozen in policy snapshot. Up to 5,000 characters.</p>
+        <textarea id="assignment-reason" name="reason" maxlength="5000" rows="3" required class="bo-decision-textarea" placeholder="Explain the operational reason for this assignment or transfer">{% if entered_reason %}{{ entered_reason }}{% endif %}</textarea>
+      </div>
+
+      <div class="bo-decision-actions">
+        <button type="submit" class="bo-schedule-button is-primary" {% if has_ongoing_visit or not collectors %}disabled{% endif %}{% if has_ongoing_visit %} title="Cannot assign or transfer account while a visit is in progress"{% endif %}>
+          {% if current_assignment %}Transfer Account{% else %}Assign Account{% endif %}
+        </button>
+        <a href="{% url 'backoffice_assignments' %}" class="bo-schedule-button" style="text-decoration: none;">Cancel</a>
+      </div>
+    </form>
+  </article>
+
+  <!-- Assignment History -->
+  <article class="bo-release-card">
+    <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 12px; color: var(--text-main, #0f172a);">Assignment History</h3>
+    {% if assignment_history %}
+    <div style="display: grid; gap: 12px;">
+      {% for hist in assignment_history %}
+      <div style="padding: 12px 14px; background: var(--bg-subtle, #f8fafc); border: 1px solid var(--border-subtle, #e2e8f0); border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <strong>{{ hist.collector.user.get_full_name|default:hist.collector.user.username }}</strong>
+            <span style="color: var(--text-subtle, #64748b); font-size: 12px; margin-left: 8px;">{{ hist.created_at|date:"d M Y, g:i A" }} — {{ hist.ended_at|date:"d M Y, g:i A"|default:"Active" }}</span>
+          </div>
+          <div>
+            <span class="bo-status-badge {% if hist.status == 'reassigned' %}is-reassigned{% elif hist.status == 'released' %}is-superseded{% else %}is-unassigned{% endif %}" style="padding: 2px 8px; font-size: 11px;">
+              {{ hist.get_status_display }}
+            </span>
+          </div>
+        </div>
+        {% if hist.end_reason %}
+        <p style="margin: 6px 0 0; font-size: 13px; color: var(--text-muted, #334155);"><strong>Reason:</strong> {{ hist.end_reason }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="margin: 0; font-size: 13px; color: var(--text-subtle, #64748b);">No previous assignments on this account.</p>
+    {% endif %}
+  </article>
+</div>
+{% endtimezone %}{% endblock %}

@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="FiCol is a secure field collection and skip-tracing workflow platform.">
+  <title>FiCol | Field Collection, with control</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+  <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+  <header class="site-header shell">
+    <a class="brand" href="{% url 'home' %}" aria-label="FiCol home"><span>F.</span>FiCol</a>
+    <nav aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#portals">Portals</a><a href="#security">Access &amp; security</a></nav>
+    <a class="sign-in" href="{% url 'login' %}">Sign in <span>→</span></a>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <p class="eyebrow"><i></i> FIELD COLLECTION PLATFORM</p>
+      <div class="hero-grid">
+        <div>
+          <h1>Field collection,<br><em>with control.</em></h1>
+          <p class="intro">FiCol brings collector fieldwork and Back Office review into one role-aware workflow—so every account action has an owner, a purpose, and a review path.</p>
+          <div class="actions"><a class="button" href="{% url 'login' %}">Access FiCol <b>→</b></a><a class="secondary" href="#how-it-works">Explore the workflow <b>↓</b></a></div>
+        </div>
+        <aside class="workflow-card" aria-label="FiCol workflow overview">
+          <div class="grid-pattern"></div>
+          <div class="map-dot dot-one"></div><div class="map-dot dot-two"></div><div class="map-dot dot-three"></div>
+          <div class="offer-card"><small>ELIGIBLE ACCOUNT</small><strong>Nearby offer available</strong><span>Verified address · within range</span><em>Ready for action</em></div>
+          <div class="review-card"><span></span><div><small>BACK OFFICE</small><strong>Visit report awaiting review</strong></div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="statement"><div class="shell"><p class="eyebrow light"><i></i> BUILT FOR THE HANDOFF</p><h2>From a nearby opportunity to an accountable outcome.</h2><p>FiCol helps collection teams coordinate eligibility, exclusive ownership, field visits, follow-ups, evidence, and operational review without blurring responsibilities.</p></div></section>
+
+    <section class="portals shell" id="portals"><div class="heading"><p class="eyebrow"><i></i> TWO FOCUSED PORTALS</p><h2>Shared account data.<br>Clear responsibilities.</h2></div><div class="portal-grid"><article class="portal collector"><span class="number">01</span><div class="icon">⌖</div><h3>Collector</h3><p>Focused tools for eligible nearby offers, assigned accounts, field activity, follow-ups, and account-information proposals.</p><ul><li>Nearby account offers</li><li>Exclusive account ownership</li><li>Visit &amp; follow-up records</li><li>Private evidence submission</li></ul></article><article class="portal office"><span class="number">02</span><div class="icon">⌘</div><h3>Back Office</h3><p>Operational oversight for review queues, scheduling, validation, assignments, and controlled decisions.</p><ul><li>Independent review queues</li><li>Assignment &amp; release decisions</li><li>Information validation</li><li>Permission-scoped access</li></ul></article></div></section>
+
+    <section class="how" id="how-it-works"><div class="shell"><p class="eyebrow light"><i></i> HOW IT WORKS</p><h2>A practical workflow, stage by stage.</h2><ol><li><b>01</b><div><h3>Discover</h3><p>Eligible accounts are offered using verified location, active access, matching rules, and current ownership.</p></div></li><li><b>02</b><div><h3>Own</h3><p>Accepted work receives a clear owner, with guardrails around capacity and active visits.</p></div></li><li><b>03</b><div><h3>Act</h3><p>Collectors document visits, request follow-ups, report payments, and propose information updates.</p></div></li><li><b>04</b><div><h3>Review</h3><p>Authorized Back Office staff review work independently and make controlled operational decisions.</p></div></li></ol></div></section>
+
+    <section class="security shell" id="security"><div><p class="eyebrow"><i></i> ACCESS BY DESIGN</p><h2>Trust is built into the workflow.</h2></div><div class="security-list"><article><span>01</span><h3>Scoped access</h3><p>Roles, client access, and permissions determine what each user can view and do.</p></article><article><span>02</span><h3>Independent review</h3><p>Protected workflows prevent users from reviewing their own submitted work.</p></article><article><span>03</span><h3>Private evidence</h3><p>Sensitive operational material remains restricted to authorized users.</p></article></div></section>
+
+    <section class="cta"><div class="shell"><p class="eyebrow light"><i></i> FICOL</p><h2>Every field action deserves a clear <em>owner and path forward.</em></h2><a class="button lime" href="{% url 'login' %}">Sign in to FiCol <b>→</b></a></div></section>
+  </main>
+  <footer class="shell"><span>FiCol · Field Collection &amp; Skip-Tracing Platform</span><a href="{% url 'login' %}">Sign in</a></footer>
+</body>
+</html>

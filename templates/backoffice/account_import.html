@@ -1,0 +1,150 @@
+{% extends "backoffice/base.html" %}
+{% load static tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+
+{% if not preview_mode %}
+<!-- Upload View -->
+<div class="bo-header-flex" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+  <div>
+    <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Bulk Account Importer</h1>
+    <p class="bo-description" style="margin: 0;">Upload delinquent loan accounts via CSV or Excel (.xlsx). Addresses are automatically geocoded with GPS coordinates so collectors can discover them on maps.</p>
+  </div>
+  <a href="{% url 'download_import_template' %}" class="bo-button" style="display: inline-flex; align-items: center; gap: 6px; background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.5V16a1.5 1.5 0 001.5 1.5h9A1.5 1.5 0 0016 16v-1.5M10 3v10m-3.5-3.5L10 13l3.5-3.5"/></svg>
+    Download CSV Template
+  </a>
+</div>
+
+<div class="bo-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; max-width: 720px;">
+  <form method="post" enctype="multipart/form-data" action="{% url 'backoffice_account_import' %}">
+    {% csrf_token %}
+    
+    <div role="note" style="margin-bottom: 18px; border: 1px solid #bfdbfe; border-radius: 6px; padding: 12px 14px; background: #eff6ff; color: #1e3a8a; font-size: 13px; line-height: 1.5;">
+      Trial accounts are automatically placed in the <strong>Trial Import Portfolio</strong> and are ready to appear on the map after import. No collector payout is configured for these trial records.
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <label for="import-file" style="display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">CSV or Excel Spreadsheet</label>
+      <div style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 24px; text-align: center; background: #f8fafc;">
+        <svg style="margin: 0 auto 10px; color: #94a3b8;" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <input id="import-file" name="import_file" type="file" accept=".csv, .xlsx, .xls" required style="display: block; margin: 0 auto 8px; font-size: 13px;">
+        <p style="font-size: 12px; color: #64748b; margin: 0;">Supports standard CSV, TSV, or Excel (.xlsx) files up to 10 MB.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <button type="submit" class="bo-button" style="background: #1d4ed8; color: #ffffff; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
+        Upload &amp; Preview Accounts
+      </button>
+      <a href="{% url 'backoffice_assignments' %}" style="font-size: 13px; color: #64748b; text-decoration: underline;">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% else %}
+<!-- Preview View -->
+<div style="margin-bottom: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Import Preview: {{ selected_client.name }}</h1>
+      <p style="font-size: 13px; color: #475569; margin: 0;">Review parsed accounts, validation status, and auto-geocoded coordinates before confirming ingestion.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="{% url 'backoffice_account_import' %}" class="bo-button" style="background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none;">
+        Cancel / Upload Another
+      </a>
+      <form method="post" action="{% url 'backoffice_account_import_confirm' %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="bo-button" style="background: #16a34a; color: #ffffff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer;">
+          ✓ Confirm &amp; Import {{ stats.valid_count }} Valid Account{{ stats.valid_count|pluralize }}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Summary Metric Badges -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px;">
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px;">
+      <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Rows</div>
+      <div style="font-size: 20px; font-weight: 800; color: #0f172a;">{{ stats.total_rows }}</div>
+    </div>
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px;">
+      <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">Valid Accounts</div>
+      <div style="font-size: 20px; font-weight: 800; color: #15803d;">{{ stats.valid_count }}</div>
+    </div>
+    <div style="background: {% if stats.error_count > 0 %}#fef2f2; border: 1px solid #fecaca;{% else %}#ffffff; border: 1px solid #e2e8f0;{% endif %} border-radius: 8px; padding: 12px 16px;">
+      <div style="font-size: 11px; font-weight: 700; color: {% if stats.error_count > 0 %}#991b1b{% else %}#64748b{% endif %}; text-transform: uppercase;">Errors (Skipped)</div>
+      <div style="font-size: 20px; font-weight: 800; color: {% if stats.error_count > 0 %}#dc2626{% else %}#0f172a{% endif %};">{{ stats.error_count }}</div>
+    </div>
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px;">
+      <div style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase;">Total Balance</div>
+      <div style="font-size: 20px; font-weight: 800; color: #1d4ed8;">PHP {{ stats.total_balance }}</div>
+    </div>
+    <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px 16px;">
+      <div style="font-size: 11px; font-weight: 700; color: #6b21a8; text-transform: uppercase;">Geocoded GPS</div>
+      <div style="font-size: 20px; font-weight: 800; color: #7e22ce;">{{ stats.valid_count }}/{{ stats.valid_count }} (100%)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Table -->
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow-x: auto;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569;">
+        <th style="padding: 10px 12px; font-weight: 700;">#</th>
+        <th style="padding: 10px 12px; font-weight: 700;">Status</th>
+        <th style="padding: 10px 12px; font-weight: 700;">Account No</th>
+        <th style="padding: 10px 12px; font-weight: 700;">Customer</th>
+        <th style="padding: 10px 12px; font-weight: 700;">Phone</th>
+        <th style="padding: 10px 12px; font-weight: 700;">Balance</th>
+        <th style="padding: 10px 12px; font-weight: 700;">Collection Address</th>
+        <th style="padding: 10px 12px; font-weight: 700;">Coordinates (GPS)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in preview_rows %}
+      <tr style="border-bottom: 1px solid #f1f5f9; {% if row.status == 'error' %}background: #fff1f2;{% elif row.status == 'warning' %}background: #fffbeb;{% endif %}">
+        <td style="padding: 10px 12px; color: #64748b;">{{ row.row_num }}</td>
+        <td style="padding: 10px 12px;">
+          {% if row.status == 'valid' %}
+          <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700; background: #dcfce7; color: #166534;">✓ Ready</span>
+          {% elif row.status == 'warning' %}
+          <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700; background: #fef3c7; color: #92400e;">! Warning</span>
+          {% else %}
+          <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700; background: #fee2e2; color: #991b1b;">✕ Error</span>
+          {% endif %}
+        </td>
+        <td style="padding: 10px 12px; font-weight: 600; color: #0f172a;">
+          {{ row.account_no|default:"—" }}
+          {% if row.errors %}
+          <div style="color: #b91c1c; font-size: 11px; font-weight: 400; margin-top: 2px;">
+            {% for e in row.errors %}{{ e }}<br>{% endfor %}
+          </div>
+          {% endif %}
+        </td>
+        <td style="padding: 10px 12px; font-weight: 600;">{{ row.customer_name }}</td>
+        <td style="padding: 10px 12px; color: #334155;">{{ row.phone|default:"None" }}</td>
+        <td style="padding: 10px 12px; font-weight: 700; color: #1e293b;">PHP {{ row.balance }}</td>
+        <td style="padding: 10px 12px; max-width: 260px; color: #475569;">
+          {{ row.address }}
+        </td>
+        <td style="padding: 10px 12px;">
+          <div style="font-family: monospace; font-size: 11px; color: #0f172a;">{{ row.latitude }}, {{ row.longitude }}</div>
+          <span style="display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #f1f5f9; color: #475569; margin-top: 2px;">
+            📍 {{ row.geo_label }}
+          </span>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="padding: 24px; text-align: center; color: #64748b;">No account rows found in the uploaded file.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endif %}
+
+{% endtimezone %}{% endblock %}

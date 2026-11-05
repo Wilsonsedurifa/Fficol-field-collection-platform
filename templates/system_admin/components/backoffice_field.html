@@ -1,0 +1,5 @@
+<div class="sa-form-group">
+  <label class="sa-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="sa-required">*</span>{% endif %}</label>
+  {{ field }}
+  {% if field.errors %}<div id="{{ field.auto_id }}_error">{% for error in field.errors %}<p class="sa-field-error">{{ error }}</p>{% endfor %}</div>{% endif %}
+</div>

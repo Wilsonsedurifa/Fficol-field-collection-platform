@@ -1,0 +1,108 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}
+  {% if is_create %}Add Collector{% else %}Collector: {{ target_user.get_full_name|default:target_user.username }}{% endif %} | FiCol System Admin
+{% endblock %}
+
+{% block admin_content %}
+<div class="sa-container">
+  <div class="sa-page-header">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <h2 class="sa-page-title" style="margin: 0;">
+          {% if is_create %}
+            Add Collector
+          {% else %}
+            Collector: {{ target_user.get_full_name|default:target_user.username }}
+          {% endif %}
+        </h2>
+        {% if not is_create %}
+          <span class="sa-badge sa-badge-{{ standing_info.badge }}" style="font-size: 0.85rem; padding: 4px 10px;">{{ standing_info.label }}</span>
+        {% endif %}
+      </div>
+      <p class="sa-page-desc" style="margin-top: 0.35rem;">
+        {% if is_create %}
+          Create a new Field Collector account with a secure email invitation.
+        {% else %}
+          Username: <code>{{ target_user.username }}</code> &bull; Email: <code>{{ target_user.email }}</code>
+        {% endif %}
+      </p>
+    </div>
+    <div class="sa-page-actions">
+      <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-secondary">&larr; Back to Users</a>
+    </div>
+  </div>
+
+  {% if is_create %}
+    <div class="sa-card" style="max-width: 680px; margin: 0 auto;">
+      <form method="post" action="{% url 'system_admin_collector_create' %}" class="sa-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="sa-alert sa-alert-danger" role="alert">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+
+        <div class="sa-form-row">
+          <div class="sa-form-group">
+            <label for="{{ form.first_name.id_for_label }}" class="sa-label">First Name</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}<p class="sa-field-error">{{ form.first_name.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="sa-form-group">
+            <label for="{{ form.last_name.id_for_label }}" class="sa-label">Last Name</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}<p class="sa-field-error">{{ form.last_name.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div class="sa-form-group">
+          <label for="{{ form.email.id_for_label }}" class="sa-label">Email Address <span class="sa-required">*</span></label>
+          {{ form.email }}
+          <p class="sa-help-text">This email is the collector's login username. A one-time link will be emailed here to set their password.</p>
+          {% if form.email.errors %}<p class="sa-field-error">{{ form.email.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="sa-alert sa-alert-info">
+          <strong>Secure Invitation Workflow:</strong> The Collector account is ready once the user verifies their email and sets their password using the one-time 72-hour setup link. No additional approval is required.
+        </div>
+
+        <div class="sa-form-actions">
+          <button type="submit" class="sa-btn sa-btn-primary">Send Collector Invitation</button>
+          <a href="{% url 'system_admin_users' %}" class="sa-btn sa-btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <div class="sa-card">
+      <h3>Account details</h3>
+      <p>Email: {% if target_user.email_verified_at %}Verified{% else %}Unverified{% endif %}</p>
+      <p>Invitation: {% if latest_invitation %}{{ latest_invitation.get_status_display }}{% else %}None{% endif %}</p>
+      <p>First portal visit: {{ collector_profile.first_portal_visit_at|default:"Never visited" }}</p>
+      <p>Last portal activity: {{ collector_profile.last_portal_activity_at|default:"Never visited" }}</p>
+      {% if is_offboarded %}
+      <p>This account is read-only.</p>
+      {% else %}
+      <form id="collector-edit-form" method="post" class="sa-form">
+        {% csrf_token %}{{ form.non_field_errors }}
+        <div class="sa-form-row">
+          <div class="sa-form-group"><label class="sa-label" for="{{ form.first_name.id_for_label }}">First name</label>{{ form.first_name }}{{ form.first_name.errors }}</div>
+          <div class="sa-form-group"><label class="sa-label" for="{{ form.last_name.id_for_label }}">Last name</label>{{ form.last_name }}{{ form.last_name.errors }}</div>
+        </div>
+        <div class="sa-form-group"><label class="sa-label" for="{{ form.email.id_for_label }}">Email address</label>{{ form.email }}{{ form.email.errors }}
+          <p class="sa-help-text">Changing the email requires a new setup invitation and email verification.</p>
+        </div>
+        <div class="sa-form-actions"><button class="sa-btn sa-btn-primary">Save account details</button></div>
+      </form>
+      {% if can_resend_invitation %}
+      <form method="post" action="{% url 'system_admin_collector_resend_invitation' target_user.pk %}">
+        {% csrf_token %}<button class="sa-btn sa-btn-secondary">Resend setup invitation</button>
+      </form>
+      {% endif %}
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

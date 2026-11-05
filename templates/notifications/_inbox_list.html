@@ -1,0 +1,110 @@
+{% load tz %}
+{% timezone "Asia/Manila" %}
+
+<div class="inbox-container">
+  <div class="inbox-header">
+    <div class="inbox-header-titles">
+      <h2 class="inbox-title">Notifications</h2>
+      <p class="inbox-subtitle">Updates on account offers, assignments, and system notices.</p>
+    </div>
+
+    {% if unread_count > 0 %}
+    <form method="post" action="{% url 'notifications:mark_all_read' %}" class="inbox-mark-all-form">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button type="submit" class="inbox-button">Mark all read</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="inbox-filters" role="navigation" aria-label="Notification filters">
+    <a href="?filter=unread" class="inbox-filter-link{% if filter_type == 'unread' %} is-active{% endif %}">
+      Unread
+    </a>
+    <a href="?filter=all" class="inbox-filter-link{% if filter_type == 'all' %} is-active{% endif %}">
+      All
+    </a>
+  </div>
+
+  {% if offer_summary or notification_items %}
+  <div class="inbox-list" role="feed" aria-label="Notifications list">
+    {% if offer_summary %}
+    <article class="inbox-card inbox-offer-summary is-unread is-clickable" aria-label="Available account offers summary">
+      <form method="post" action="{% url 'notifications:open_offers' %}" class="inbox-card-open-form">
+        {% csrf_token %}
+        <button type="submit" class="inbox-card-open-overlay" aria-label="View {{ offer_summary.count }} available account offer{{ offer_summary.count|pluralize }}: View your offers before they expire."></button>
+      </form>
+      <div class="inbox-card-main">
+        <div class="inbox-card-header">
+          <span class="inbox-card-type">Offer</span>
+          <span class="inbox-card-state">Unread</span>
+        </div>
+        <h3 class="inbox-offer-title">{{ offer_summary.count }} account offer{{ offer_summary.count|pluralize }} {% if offer_summary.count == 1 %}is{% else %}are{% endif %} available</h3>
+        <p class="inbox-card-message">View your offers before they expire.</p>
+      </div>
+    </article>
+    {% endif %}
+
+    {% for item in notification_items %}
+    <article class="inbox-card{% if not item.notification.read_at %} is-unread{% endif %}{% if item.action_url or not item.notification.read_at %} is-clickable{% endif %}">
+      {% if item.action_url or not item.notification.read_at %}
+      <form method="post" action="{% url 'notifications:open' item.notification.pk %}" class="inbox-card-open-form">
+        {% csrf_token %}
+        <button type="submit" class="inbox-card-open-overlay" aria-label="{% if item.action_url %}{{ item.action_label }}: {{ item.notification.message }}{% else %}Mark as read: {{ item.notification.message }}{% endif %}"></button>
+      </form>
+      {% endif %}
+
+      <div class="inbox-card-main">
+        <div class="inbox-card-header">
+          <span class="inbox-card-type">{{ item.notification.get_kind_display }}</span>
+          <span class="inbox-card-state">{% if item.notification.read_at %}Read{% else %}Unread{% endif %}</span>
+          <time class="inbox-card-time" datetime="{{ item.notification.created_at|date:'c' }}">
+            {{ item.notification.created_at|date:"d M Y, g:i A" }}
+          </time>
+        </div>
+
+        <p class="inbox-card-message">{{ item.notification.message }}</p>
+      </div>
+
+      <div class="inbox-card-actions">
+        {% if not item.notification.read_at %}
+        <form method="post" action="{% url 'notifications:mark_read' item.notification.pk %}" class="inbox-card-read-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="inbox-button">Mark read</button>
+        </form>
+        {% else %}
+        <form method="post" action="{% url 'notifications:mark_unread' item.notification.pk %}" class="inbox-card-unread-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="inbox-button">Mark unread</button>
+        </form>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <nav class="inbox-pagination" aria-label="Notification pages">
+    {% if page_obj.has_previous %}
+    <a class="inbox-button" href="?filter={{ filter_type }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+    <span class="inbox-page-status">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a class="inbox-button" href="?filter={{ filter_type }}&amp;page={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="inbox-empty">
+    <h3>{% if filter_type == 'unread' %}No unread notifications{% else %}No notifications yet{% endif %}</h3>
+    <p>{% if filter_type == 'unread' %}You have read all your notifications. Check the all filter to view past notices.{% else %}When new account offers or system updates arrive, they will appear here.{% endif %}</p>
+    {% if filter_type == 'unread' and all_count > 0 %}
+    <a href="?filter=all" class="inbox-button">View all notifications</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endtimezone %}

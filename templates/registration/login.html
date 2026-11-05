@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FiCol &bull; Sign In</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+  <main class="login-container">
+    
+    <!-- Clean Minimal Header -->
+    <header class="brand-header">
+      <div class="brand-logo-wrap" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="10" fill="#1D4ED8"/>
+          <path d="M12 28V12H28V16H17V18H26V22H17V28H12Z" fill="#FFFFFF"/>
+          <circle cx="28" cy="28" r="3.5" fill="#93C5FD"/>
+        </svg>
+      </div>
+      <h1 class="brand-name">FiCol</h1>
+      <p class="brand-caption">Field Collection &amp; Skip-Tracing Platform</p>
+    </header>
+
+    <!-- Accessible Django Error Banner -->
+    {% if form.errors %}
+      <div class="alert-box" role="alert" aria-live="assertive">
+        <div class="alert-content">
+          <p>Invalid username or password.</p>
+          {% if form.non_field_errors %}
+            <ul class="error-list">
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Sign In Form -->
+    <form class="login-form" method="POST" action="{% url 'login' %}" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <!-- Username Field -->
+      <div class="form-group">
+        <label for="id_username" class="form-label">Email or username</label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            name="username"
+            id="id_username"
+            class="form-input"
+            placeholder="Enter email or username"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            required
+          >
+        </div>
+      </div>
+
+      <!-- Password Field with Show/Hide Toggle -->
+      <div class="form-group">
+        <label for="id_password" class="form-label">Password</label>
+        <div class="input-wrapper">
+          <input
+            type="password"
+            name="password"
+            id="id_password"
+            class="form-input"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            spellcheck="false"
+            required
+          >
+          <button
+            type="button"
+            id="password-toggle"
+            class="password-toggle"
+            aria-label="Show password"
+            aria-pressed="false"
+            aria-controls="id_password"
+          >
+            <span id="password-toggle-text">Show</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sign In Button -->
+      <button type="submit" class="submit-button" id="submit-btn">
+        Sign In
+      </button>
+    </form>
+
+    <!-- Administrator Access Notice -->
+    <footer class="support-notice">
+      <p class="notice-text">
+        Accounts are provided by management. Contact your administrator if you need access.
+      </p>
+    </footer>
+
+  </main>
+
+  <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<p class="bo-description">Verify reported customer payments for your authorized clients. Collectors assist customers and upload proof; they never receive customer money through FiCol.</p>
+
+<nav class="mb-5 flex flex-wrap gap-2" aria-label="Payment status filters">
+  <a href="?state=pending&amp;q={{ search_query|urlencode }}" {% if payment_state == 'pending' %}aria-current="page"{% endif %} class="min-h-11 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold {% if payment_state == 'pending' %}bg-indigo-600 text-white{% else %}bg-white text-slate-700{% endif %}">Pending verification {{ payment_counts.pending }}</a>
+  <a href="?state=verified&amp;q={{ search_query|urlencode }}" {% if payment_state == 'verified' %}aria-current="page"{% endif %} class="min-h-11 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold {% if payment_state == 'verified' %}bg-indigo-600 text-white{% else %}bg-white text-slate-700{% endif %}">Verified {{ payment_counts.verified }}</a>
+  <a href="?state=rejected&amp;q={{ search_query|urlencode }}" {% if payment_state == 'rejected' %}aria-current="page"{% endif %} class="min-h-11 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold {% if payment_state == 'rejected' %}bg-indigo-600 text-white{% else %}bg-white text-slate-700{% endif %}">Rejected {{ payment_counts.rejected }}</a>
+</nav>
+
+<form method="get" role="search" class="mb-6">
+  <input type="hidden" name="state" value="{{ payment_state }}">
+  <label class="mb-2 block text-sm font-semibold" for="payment-search">Find a reported payment</label>
+  <div class="flex flex-wrap gap-2">
+    <input id="payment-search" name="q" type="search" maxlength="100" value="{{ search_query }}" placeholder="Account, customer, reference or collector" class="min-h-11 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+    <button type="submit" class="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Search</button>
+    {% if search_query %}
+    <a href="?state={{ payment_state }}" class="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<p class="mb-4 text-sm text-slate-600">{{ page_obj.paginator.count }} matching record{{ page_obj.paginator.count|pluralize }} · Philippine time</p>
+
+<div class="space-y-5">
+  {% for payment in payments %}
+  <article class="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="break-words text-xl font-bold text-slate-900">{{ payment.account.reference }}</h2>
+        <p class="mt-1 break-words text-sm text-slate-600">{{ payment.account.customer.display_name }} · {{ payment.account.client.name }}</p>
+      </div>
+      <div class="flex flex-col items-end gap-1">
+        <span class="rounded-full px-3 py-1 text-xs font-semibold {% if payment.status == 'verified' %}bg-emerald-50 text-emerald-800{% elif payment.status == 'rejected' %}bg-rose-50 text-rose-800{% else %}bg-amber-50 text-amber-800{% endif %}">
+          {{ payment.get_status_display }}
+        </span>
+        <strong class="text-lg font-bold text-slate-900">{{ payment.account.currency }} {{ payment.amount|floatformat:2 }}</strong>
+      </div>
+    </div>
+
+    <dl class="mt-5 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+      <div>
+        <dt class="text-xs text-slate-500">Collector</dt>
+        <dd class="mt-1 break-words text-sm font-semibold">{{ payment.reported_by.get_full_name|default:payment.reported_by.username }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-500">Method</dt>
+        <dd class="mt-1 text-sm font-semibold">{{ payment.get_method_display }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-500">Reported payment time</dt>
+        <dd class="mt-1 text-sm">{{ payment.paid_at|date:"d M Y, g:i A" }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-500">Transaction reference</dt>
+        <dd class="mt-1 break-words text-sm font-mono">{{ payment.reference|default:"None provided" }}</dd>
+      </div>
+    </dl>
+
+    {% if payment.notes %}
+    <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h3 class="text-xs font-semibold text-slate-500">Collector notes</h3>
+      <p class="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{{ payment.notes }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Private Proof Documents -->
+    <section class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4" aria-label="Attached proof evidence">
+      <h3 class="text-sm font-semibold text-slate-800">Uploaded proof evidence</h3>
+      <div class="mt-3 flex flex-wrap gap-3">
+        {% for doc in payment.documents.all %}
+        <a href="{% url 'download_document' doc.pk %}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-700 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+          <span>{{ doc.original_name }}</span>
+          <span class="text-xs text-slate-400">({{ doc.size_bytes|filesizeformat }})</span>
+        </a>
+        {% empty %}
+        <p class="text-sm text-slate-500">No proof document attached.</p>
+        {% endfor %}
+      </div>
+      <p class="mt-2 text-xs text-slate-500">Stored in private storage. Proof is reviewed against creditor statements; verification does not alter account balance or close the account.</p>
+    </section>
+
+    <!-- Verification Actions -->
+    {% if payment.status == 'reported' %}
+    <form method="post" action="{% url 'review_payment' payment.pk %}?state={{ payment_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.number }}" class="mt-5 border-t border-slate-200 pt-4">
+      {% csrf_token %}
+      <label for="payment-reason-{{ payment.pk }}" class="mb-2 block text-sm font-semibold">Review note — required when rejecting payment</label>
+      <textarea id="payment-reason-{{ payment.pk }}" name="reason" maxlength="5000" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" placeholder="Confirm match with bank record or explain rejection reason">{% if review_error_id == payment.pk %}{{ entered_reason }}{% endif %}</textarea>
+      
+      {% if review_error_id == payment.pk and review_error %}
+      <p class="mt-1 text-sm font-medium text-rose-600" role="alert">{{ review_error }}</p>
+      {% endif %}
+
+      <div class="mt-3 flex flex-wrap gap-3">
+        <button name="decision" value="verify" type="submit" class="min-h-11 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700">Verify payment</button>
+        <button name="decision" value="reject" type="submit" class="min-h-11 rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800 hover:bg-rose-100">Reject payment</button>
+      </div>
+    </form>
+    {% else %}
+    <div class="mt-4 border-t border-slate-200 pt-3 text-sm text-slate-600">
+      <p>Reviewed by <strong>{{ payment.verified_by.get_full_name|default:payment.verified_by.username }}</strong> on {{ payment.verified_at|date:"d M Y, g:i A" }}</p>
+      {% if payment.rejection_reason %}
+      <p class="mt-1 text-rose-700"><strong>Rejection note:</strong> {{ payment.rejection_reason }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </article>
+  {% empty %}
+  <section class="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+    <h2 class="text-lg font-semibold">No matching payment records</h2>
+    <p class="mt-2 text-sm text-slate-600">Try another filter or search. New payment reports will appear here when their client is within your access.</p>
+  </section>
+  {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="Payment review pages" class="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm">
+  {% if page_obj.has_previous %}
+  <a class="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-3" href="?state={{ payment_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>
+  {% endif %}
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a class="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-3" href="?state={{ payment_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% endtimezone %}{% endblock %}

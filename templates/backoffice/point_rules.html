@@ -1,0 +1,112 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<p class="bo-description">Manage global activity point rules awarded for validated customer information. Publishing a new rule version retires the preceding active version for that category without editing historical point transactions. Each rule awards exactly 1 whole point in the current version.</p>
+
+<!-- Publish Rule Form Card -->
+<section class="mb-8 rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm" aria-labelledby="publish-point-rule-heading">
+  <h2 id="publish-point-rule-heading" class="text-lg font-bold text-slate-900">Publish Point Rule Version</h2>
+  <p class="mt-1 text-sm text-slate-600">Activate verified point awards (1 point) for a customer information category.</p>
+
+  {% if form_error %}
+  <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800" role="alert">
+    {{ form_error }}
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'backoffice_point_rules' %}" class="mt-5 grid gap-4 sm:grid-cols-2 md:grid-cols-3 items-end">
+    {% csrf_token %}
+    <div>
+      <label for="id_category" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">Information Category</label>
+      <select id="id_category" name="category" required class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        <option value="">Select category...</option>
+        {% for code, label in categories %}
+        <option value="{{ code }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="id_points" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">Points Awarded</label>
+      <input id="id_points" name="points" type="number" value="1" readonly class="min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 focus-visible:outline-none cursor-not-allowed">
+      <p class="mt-1 text-xs text-slate-500">Current version awards exactly 1 whole point.</p>
+    </div>
+
+    <div>
+      <button type="submit" class="min-h-11 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600">
+        Publish Rule Version
+      </button>
+    </div>
+  </form>
+</section>
+
+<!-- Point Rules Table -->
+<div class="mb-4 flex items-center justify-between">
+  <h2 class="text-base font-bold text-slate-900">Point Rule History</h2>
+  <p class="text-sm text-slate-600">{{ page_obj.paginator.count }} rule record{{ page_obj.paginator.count|pluralize }}</p>
+</div>
+
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="w-full text-left text-sm text-slate-700">
+    <thead class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Category</th>
+        <th scope="col" class="px-4 py-3">Version</th>
+        <th scope="col" class="px-4 py-3">Points</th>
+        <th scope="col" class="px-4 py-3">Status</th>
+        <th scope="col" class="px-4 py-3">Published By</th>
+        <th scope="col" class="px-4 py-3">Published At</th>
+        <th scope="col" class="px-4 py-3">Retirement</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-200">
+      {% for r in rules %}
+      <tr class="hover:bg-slate-50">
+        <td class="px-4 py-3 font-semibold text-slate-900">{{ r.get_category_display }}</td>
+        <td class="px-4 py-3 font-mono">v{{ r.version }}</td>
+        <td class="px-4 py-3 font-bold text-slate-900">{{ r.points }} pt</td>
+        <td class="px-4 py-3">
+          {% if r.is_active %}
+          <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Active</span>
+          {% else %}
+          <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">Retired</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3 text-slate-600">{{ r.created_by.get_full_name|default:r.created_by.username|default:"System" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ r.created_at|date:"d M Y, g:i A" }}</td>
+        <td class="px-4 py-3 text-xs text-slate-500">
+          {% if r.retired_at %}
+          Retired {{ r.retired_at|date:"d M Y, g:i A" }} by {{ r.retired_by.get_full_name|default:r.retired_by.username|default:"Staff" }}
+          {% else %}
+          <span class="text-emerald-700 font-medium">Currently active</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+          No point rules published yet. Publish a rule to begin awarding verified points.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-6 flex items-center justify-between border-t border-slate-200 pt-4" aria-label="Pagination">
+  <div>
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="min-h-11 inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Previous</a>
+    {% endif %}
+  </div>
+  <p class="text-sm text-slate-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
+  <div>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="min-h-11 inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Next</a>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}
+
+{% endtimezone %}{% endblock %}

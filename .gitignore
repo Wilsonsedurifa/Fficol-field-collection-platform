@@ -1,0 +1,46 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+env/
+env_old/
+env_broken/
+venv/
+ficolenv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Media files
+private_media/
+media/
+staticfiles/
+
+# Database
+*.sqlite3
+db.sqlite3
+
+# Node / Frontend
+node_modules/
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local scripts
+run.bat
+runserver.bat
+
+# Local database implementation progress

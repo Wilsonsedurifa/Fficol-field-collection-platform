@@ -1,0 +1,106 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<p class="bo-description">Manage direct account assignments and transfers for your authorized clients. Review collector capacity and advisory locations before assigning accounts.</p>
+
+<nav class="bo-assignment-filters" aria-label="Account assignment status filters">
+  <a href="?state=unassigned&amp;q={{ search_query|urlencode }}" {% if assignment_state == 'unassigned' %}aria-current="page"{% endif %} class="bo-assignment-filter-btn {% if assignment_state == 'unassigned' %}is-active{% endif %}">
+    <span>Unassigned</span>
+    <span class="bo-assignment-filter-count">{{ assignment_counts.unassigned }}</span>
+  </a>
+  <a href="?state=assigned&amp;q={{ search_query|urlencode }}" {% if assignment_state == 'assigned' %}aria-current="page"{% endif %} class="bo-assignment-filter-btn {% if assignment_state == 'assigned' %}is-active{% endif %}">
+    <span>Assigned</span>
+    <span class="bo-assignment-filter-count">{{ assignment_counts.assigned }}</span>
+  </a>
+  <a href="?state=all&amp;q={{ search_query|urlencode }}" {% if assignment_state == 'all' %}aria-current="page"{% endif %} class="bo-assignment-filter-btn {% if assignment_state == 'all' %}is-active{% endif %}">
+    <span>All open accounts</span>
+    <span class="bo-assignment-filter-count">{{ assignment_counts.all }}</span>
+  </a>
+</nav>
+
+<form method="get" role="search" class="bo-release-search">
+  <input type="hidden" name="state" value="{{ assignment_state }}">
+  <label class="bo-release-search-label" for="assignment-search">Find an account</label>
+  <div class="bo-release-search-bar">
+    <input id="assignment-search" name="q" type="search" maxlength="100" value="{{ search_query }}" placeholder="Reference, customer, address or collector" class="bo-release-search-input">
+    <button type="submit" class="bo-release-search-btn">Search</button>
+    {% if search_query %}
+    <a href="?state={{ assignment_state }}" class="bo-release-search-clear">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<p class="bo-release-meta-summary">{{ page_obj.paginator.count }} matching account{{ page_obj.paginator.count|pluralize }} · Philippine time</p>
+
+<div class="bo-assignment-list">
+  {% for account in accounts %}
+  {% with active_assignment=account.active_assignments.0 %}
+  <article class="bo-assignment-card">
+    <div class="bo-assignment-card-header">
+      <div>
+        <h2 class="bo-assignment-card-title"><a href="{% url 'backoffice_account_assignment_detail' account.pk %}" style="color: inherit; text-decoration: underline;">{{ account.reference }}</a></h2>
+        <p class="bo-assignment-card-subtitle">{{ account.customer.display_name }} · {{ account.client.name }}</p>
+      </div>
+      <div>
+        {% if active_assignment and active_assignment.status == 'active' %}
+        <span class="bo-status-badge is-assigned">Assigned</span>
+        {% else %}
+        <span class="bo-status-badge is-unassigned">Unassigned</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <dl class="bo-assignment-grid">
+      <div>
+        <dt class="bo-assignment-field-label">Current owner</dt>
+        <dd class="bo-assignment-field-val is-bold">
+          {% if active_assignment and active_assignment.status == 'active' %}
+          {{ active_assignment.collector.user.get_full_name|default:active_assignment.collector.user.username }}
+          {% else %}
+          <span style="color: var(--text-subtle, #64748b);">None (Ready for assignment)</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="bo-assignment-field-label">Collection address</dt>
+        <dd class="bo-assignment-field-val">{{ account.collection_address.address_line }}{% if account.collection_address.territory %}, {{ account.collection_address.territory.name }}{% endif %}</dd>
+      </div>
+      <div>
+        <dt class="bo-assignment-field-label">Balance</dt>
+        <dd class="bo-assignment-field-val is-bold">{{ account.currency }} {{ account.balance_snapshot|floatformat:2 }}</dd>
+      </div>
+      <div>
+        <dt class="bo-assignment-field-label">Action</dt>
+        <dd class="bo-assignment-field-val">
+          <a href="{% url 'backoffice_account_assignment_detail' account.pk %}" class="bo-schedule-button is-primary" style="padding: 6px 14px; font-size: 13px; text-decoration: none;">
+            {% if active_assignment and active_assignment.status == 'active' %}Manage / Transfer{% else %}Assign Account{% endif %}
+          </a>
+        </dd>
+      </div>
+    </dl>
+  </article>
+  {% endwith %}
+  {% empty %}
+  <div class="bo-release-empty">
+    <p>No accounts match this view.</p>
+  </div>
+  {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="bo-release-pagination" aria-label="Pagination">
+  {% if page_obj.has_previous %}
+  <a class="bo-pagination-btn" href="?state={{ assignment_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>
+  {% else %}
+  <span class="bo-pagination-disabled">Previous</span>
+  {% endif %}
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a class="bo-pagination-btn" href="?state={{ assignment_state }}&amp;q={{ search_query|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>
+  {% else %}
+  <span class="bo-pagination-disabled">Next</span>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% endtimezone %}{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "backoffice/base.html" %}
+{% load tz %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<div class="bo-scheduling-page">
+  <p class="bo-description">Set the next visit window for your collectors. Scheduling is independent of report review. All times are Philippine time.</p>
+
+  <section class="bo-schedule-panel" aria-labelledby="scheduling-heading">
+    <div class="bo-panel-heading"><div><h2 id="scheduling-heading">Collector requests</h2><p>Review suggested dates and authorize a visit window.</p></div><span class="bo-count">{{ schedule_requests.paginator.count }} awaiting schedule</span></div>
+    <div class="bo-schedule-list">
+    {% for task in schedule_requests %}
+      <article class="bo-schedule-record">
+        <h3>{{ task.account.reference }} · {{ task.account.customer.display_name }}</h3>
+        <p class="bo-schedule-meta">{{ task.assignee.get_full_name|default:task.assignee.username }} proposes {{ task.due_at|date:"d M Y, g:i A" }}</p>
+        <form method="post" action="{% url 'activities:authorize_followup' task.assignment_id %}" class="bo-schedule-form">{% csrf_token %}
+          <input type="hidden" name="task_id" value="{{ task.pk }}">
+          <div class="bo-schedule-fields">
+            <div><label for="request-start-{{ task.pk }}">Available from</label><input id="request-start-{{ task.pk }}" type="datetime-local" name="available_from" value="{{ task.due_at|date:'Y-m-d\TH:i' }}"></div>
+            <div><label for="request-deadline-{{ task.pk }}">Complete by</label><input id="request-deadline-{{ task.pk }}" type="datetime-local" name="due_at"></div>
+          </div>
+          <div><label for="request-note-{{ task.pk }}">Decision note</label><p class="bo-field-hint">Required when rejecting a request.</p><textarea id="request-note-{{ task.pk }}" name="note" maxlength="5000" rows="3"></textarea></div>
+          <div class="bo-schedule-actions"><button class="bo-schedule-button is-primary" type="submit" name="decision" value="authorize">Authorize schedule</button><button class="bo-schedule-button is-danger" type="submit" name="decision" value="reject">Reject request</button></div>
+        </form>
+      </article>
+    {% empty %}
+      <div class="bo-schedule-empty"><h3>No requests awaiting a schedule.</h3><p>Collector revisit requests will appear here when submitted.</p></div>
+    {% endfor %}
+    </div>
+    {% if schedule_requests.has_other_pages %}<nav class="bo-schedule-pagination" aria-label="Request pages">{% if schedule_requests.has_previous %}<a class="bo-schedule-button" href="?request_page={{ schedule_requests.previous_page_number }}#scheduling-heading">Previous requests</a>{% endif %}<span>Page {{ schedule_requests.number }} of {{ schedule_requests.paginator.num_pages }}</span>{% if schedule_requests.has_next %}<a class="bo-schedule-button" href="?request_page={{ schedule_requests.next_page_number }}#scheduling-heading">More requests</a>{% endif %}</nav>{% endif %}
+  </section>
+
+  <section class="bo-schedule-panel" aria-labelledby="assigned-scheduling-heading">
+    <div class="bo-panel-heading"><div><h2 id="assigned-scheduling-heading">Schedule directly for an assigned account</h2><p>Choose an account to set its next visit window.</p></div><span class="bo-count">{{ schedule_assignments.paginator.count }} account{{ schedule_assignments.paginator.count|pluralize }}</span></div>
+    <div class="bo-schedule-list">
+    {% for assignment in schedule_assignments %}
+      <details class="bo-assignment-record">
+        <summary>{{ assignment.account.reference }} · {{ assignment.collector.user.get_full_name|default:assignment.collector.user.username }}</summary>
+        <form method="post" action="{% url 'activities:authorize_followup' assignment.pk %}" class="bo-schedule-form">{% csrf_token %}
+          <input type="hidden" name="task_id" value="">
+          <div class="bo-schedule-fields">
+            <div><label for="assignment-start-{{ assignment.pk }}">Available from</label><input id="assignment-start-{{ assignment.pk }}" type="datetime-local" name="available_from" required></div>
+            <div><label for="assignment-deadline-{{ assignment.pk }}">Complete by</label><input id="assignment-deadline-{{ assignment.pk }}" type="datetime-local" name="due_at" required></div>
+          </div>
+          <div><label for="assignment-note-{{ assignment.pk }}">Schedule note</label><textarea id="assignment-note-{{ assignment.pk }}" name="note" maxlength="5000" rows="3"></textarea></div>
+          <div class="bo-schedule-actions"><button class="bo-schedule-button is-primary" type="submit" name="decision" value="authorize">Authorize schedule</button></div>
+        </form>
+      </details>
+    {% empty %}
+      <div class="bo-schedule-empty"><h3>No eligible assigned accounts within your access.</h3><p>Assigned accounts for your authorized clients will appear here.</p></div>
+    {% endfor %}
+    </div>
+    {% if schedule_assignments.has_other_pages %}<nav class="bo-schedule-pagination" aria-label="Assigned account pages">{% if schedule_assignments.has_previous %}<a class="bo-schedule-button" href="?schedule_page={{ schedule_assignments.previous_page_number }}#assigned-scheduling-heading">Previous accounts</a>{% endif %}<span>Page {{ schedule_assignments.number }} of {{ schedule_assignments.paginator.num_pages }}</span>{% if schedule_assignments.has_next %}<a class="bo-schedule-button" href="?schedule_page={{ schedule_assignments.next_page_number }}#assigned-scheduling-heading">More accounts</a>{% endif %}</nav>{% endif %}
+  </section>
+
+  <section class="bo-schedule-panel" aria-labelledby="overdue-heading">
+    <div class="bo-panel-heading"><div><h2 id="overdue-heading">Overdue schedules</h2><p>Contact the collector to resolve overdue work. Accounts remain assigned until reassignment is handled.</p></div><span class="bo-count{% if overdue_schedules.paginator.count %} is-warning{% endif %}">{{ overdue_schedules.paginator.count }} overdue</span></div>
+    <div class="bo-schedule-list">
+    {% for task in overdue_schedules %}
+      <article class="bo-overdue-record"><h3>{{ task.account.reference }}</h3><p>{{ task.assignee.get_full_name|default:task.assignee.username }} · Deadline {{ task.due_at|date:"d M Y, g:i A" }}</p></article>
+    {% empty %}
+      <div class="bo-schedule-empty"><h3>No overdue authorized schedules.</h3><p>Visits that pass their completion deadline will appear here.</p></div>
+    {% endfor %}
+    </div>
+    {% if overdue_schedules.has_other_pages %}<nav class="bo-schedule-pagination" aria-label="Overdue schedule pages">{% if overdue_schedules.has_previous %}<a class="bo-schedule-button" href="?overdue_page={{ overdue_schedules.previous_page_number }}#overdue-heading">Previous overdue schedules</a>{% endif %}<span>Page {{ overdue_schedules.number }} of {{ overdue_schedules.paginator.num_pages }}</span>{% if overdue_schedules.has_next %}<a class="bo-schedule-button" href="?overdue_page={{ overdue_schedules.next_page_number }}#overdue-heading">More overdue schedules</a>{% endif %}</nav>{% endif %}
+  </section>
+</div>
+{% endtimezone %}{% endblock %}

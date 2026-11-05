@@ -1,0 +1,103 @@
+<article class="bo-status-card">
+  <div class="bo-status-card-header">
+    <div>
+      <h3 class="bo-status-card-title">Account Lifecycle Status</h3>
+      <p class="bo-assignment-card-subtitle">Manage lifecycle state and automatic assignment/offer cleanup.</p>
+    </div>
+    <div>
+      <span class="bo-status-badge is-{{ account.status }}">
+        {{ account.get_status_display }}
+      </span>
+    </div>
+  </div>
+
+  {% if can_change_account_status %}
+    {% if allowed_status_targets %}
+    <form method="post" action="{% url 'backoffice_change_account_status' account.pk %}" class="bo-status-form">
+      {% csrf_token %}
+      <input type="hidden" name="event_id" value="{{ status_event_id }}">
+
+      <div class="bo-status-form-group">
+        <label for="id_to_status" class="bo-status-form-label">Transition To <span class="bo-decision-error">*</span></label>
+        <select id="id_to_status" name="to_status" required class="bo-status-select">
+          <option value="" disabled selected>Select new status...</option>
+          {% for val, label in allowed_status_targets %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if account_has_unverified_payments %}
+      <div class="bo-status-terminal-notice is-blocked" role="note">
+        <strong>Notice:</strong> This account has unverified payment reports. Resolving or closing this account is blocked until all payments are verified or rejected.
+      </div>
+      {% endif %}
+
+      <div class="bo-status-terminal-notice" role="note">
+        <strong>Settlement requirement:</strong> Resolved and Closed require the current source balance snapshot to be 0.00 and no unverified payment reports. The displayed balance is a source snapshot, not a balance recalculated from payment reports.
+      </div>
+
+      <div class="bo-status-terminal-notice" role="note">
+        <strong>Side effects note:</strong> Moving to a terminal status (Resolved, Closed, Invalid) or paused status (On Hold, Disputed, Legal) will automatically complete or release active assignments, withdraw pending offers, cancel pending follow-ups, and supersede release requests.
+      </div>
+
+      <div class="bo-status-form-group">
+        <label for="id_status_reason" class="bo-status-form-label">Reason for Status Change <span class="bo-decision-error">*</span></label>
+        <textarea id="id_status_reason" name="reason" maxlength="5000" rows="3" required class="bo-decision-textarea" placeholder="Explain the operational reason for this account status transition..."></textarea>
+      </div>
+
+      <div class="bo-status-checkbox-group">
+        <input type="checkbox" id="id_confirm_terminal" name="confirm_terminal" value="true" class="form-check-input">
+        <label for="id_confirm_terminal" class="bo-status-checkbox-label">
+          I confirm the source balance snapshot is zero and payment reports are verified. A terminal status will complete the active assignment and end field work.
+        </label>
+      </div>
+
+      <div class="bo-decision-actions">
+        <button type="submit" class="bo-schedule-button is-primary">
+          Update Account Status
+        </button>
+      </div>
+    </form>
+    {% else %}
+    <p class="bo-status-history-empty">No transitions are currently available from the status '{{ account.get_status_display }}'.</p>
+    {% endif %}
+  {% else %}
+  <p class="bo-status-history-empty">You do not have permission to change account status.</p>
+  {% endif %}
+
+  <!-- Status History Log -->
+  <div class="bo-status-history-container">
+    <h4 class="bo-status-card-title">Status Change History</h4>
+    {% if status_history %}
+    <div class="bo-table-responsive">
+      <table class="bo-status-history-table" aria-label="Account status history">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Transition</th>
+            <th>Changed By</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for change in status_history %}
+          <tr>
+            <td>{{ change.created_at|date:"d M Y, g:i A" }}</td>
+            <td>
+              <span class="bo-status-badge is-{{ change.from_status }}">{{ change.from_status|title }}</span>
+              &rarr;
+              <span class="bo-status-badge is-{{ change.to_status }}">{{ change.to_status|title }}</span>
+            </td>
+            <td>{{ change.changed_by.get_full_name|default:change.changed_by.username }}</td>
+            <td>{{ change.reason }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="bo-status-history-empty">No status changes recorded for this account yet.</p>
+    {% endif %}
+  </div>
+</article>

@@ -1,0 +1,24 @@
+.information-page { max-width: 850px; margin: 0 auto; padding: 24px; color: #1e293b; overflow-wrap: anywhere; }
+.information-page h1 { font-size: 1.5rem; font-weight: 700; margin: 20px 0 12px; }
+.information-page h2 { font-size: 1.125rem; font-weight: 700; margin-bottom: 14px; }
+.information-page h3 { font-weight: 600; }
+.information-page p { margin: 10px 0; line-height: 1.6; }
+.information-card { background: #fff; border: 1px solid #dbe3ef; border-radius: 16px; padding: 24px; margin: 20px 0; }
+.information-category, .information-form, .information-field { display: grid; gap: 10px; }
+.information-form { gap: 20px; }
+.information-page label { font-weight: 600; }
+.information-page input, .information-page select, .information-page textarea { width: 100%; min-height: 48px; padding: 12px; border: 1px solid #94a3b8; border-radius: 8px; background: #fff; color: #0f172a; font: inherit; }
+.information-page textarea { resize: vertical; }
+.information-page input[type="hidden"] { display: none; }
+.information-button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 18px; border: 1px solid #c7d2fe; border-radius: 8px; color: #3730a3; background: #eef2ff; font-weight: 600; text-decoration: none; cursor: pointer; }
+.information-primary { background: #4338ca; color: #fff; border-color: #4338ca; }
+.information-link { color: #3730a3; text-decoration: underline; display: inline-block; padding: 12px 0; }
+.information-page :is(input, select, textarea, button, a):focus-visible { outline: 3px solid #4338ca; outline-offset: 3px; }
+.information-hint { color: #475569; font-size: .875rem; }
+.information-errors, .information-page .errorlist { color: #991b1b; }
+.information-errors { padding: 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; }
+.information-notice { background: #eef2ff; color: #312e81; padding: 14px; border-radius: 8px; }
+.information-history { border-top: 1px solid #e2e8f0; padding: 18px 0; }
+.information-status { display: inline-block; font-size: .875rem; border-radius: 20px; background: #f1f5f9; padding: 4px 10px; }
+.information-pagination { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 600px) { .information-page { padding: 16px; } .information-card { padding: 18px; } .information-button { width: 100%; } }

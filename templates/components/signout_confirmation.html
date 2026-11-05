@@ -1,0 +1,8 @@
+<dialog id="signout-confirmation" class="signout-dialog" aria-labelledby="signout-title" aria-describedby="signout-description" data-logout-url="{% url 'logout' %}">
+  <h2 id="signout-title">Sign out?</h2>
+  <p id="signout-description">Are you sure you want to sign out of FiCol?</p>
+  <div class="signout-dialog-actions">
+    <button type="button" class="signout-cancel" data-signout-cancel autofocus>Cancel</button>
+    <button type="button" class="signout-confirm" data-signout-confirm>Sign out</button>
+  </div>
+</dialog>

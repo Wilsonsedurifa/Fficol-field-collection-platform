@@ -1,0 +1,74 @@
+{% extends "backoffice/base.html" %}
+{% load static tz %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/information/backoffice.css' %}">{% endblock %}
+{% block backoffice_content %}{% timezone "Asia/Manila" %}
+<section class="review-queue" aria-labelledby="review-queue-title">
+  <header class="review-page-header">
+    <div>
+      <p class="review-eyebrow">Information validation</p>
+      <h2 id="review-queue-title">Review information proposals</h2>
+      <p>Validate collector-submitted account information for clients within your access. Times are shown in Philippine time.</p>
+    </div>
+    <span class="review-count">{{ page_obj.paginator.count }} proposal{{ page_obj.paginator.count|pluralize }}</span>
+  </header>
+
+  <form method="get" class="review-filter-bar" role="search">
+    <div class="review-field"><label for="info-status">Status</label><select id="info-status" name="status">{% for value,label in statuses %}<option value="{{ value }}"{% if filters.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="review-field"><label for="info-category">Category</label><select id="info-category" name="category">{% for value,label in categories %}<option value="{{ value }}"{% if filters.category == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="review-field review-field--search"><label for="info-search">Find a proposal</label><input id="info-search" name="q" type="search" maxlength="100" value="{{ filters.query }}" placeholder="Account, customer, or collector"></div>
+    <button class="review-button review-button--primary" type="submit">Apply filters</button>
+    <a class="review-button" href="{% url 'backoffice_information_proposals' %}">Clear</a>
+  </form>
+
+  <p class="review-summary">Oldest submissions first. Compare the current record with the proposed change before deciding.</p>
+
+  <div class="review-list">
+  {% for row in rows %}{% with proposal=row.proposal %}
+    <article class="review-item" aria-labelledby="proposal-heading-{{ proposal.pk }}">
+      <header class="review-item__header">
+        <div><h3 id="proposal-heading-{{ proposal.pk }}">{{ proposal.account.reference }} · {{ proposal.get_category_display }}</h3><p>{{ proposal.account.customer.display_name }} · {{ proposal.account.client.name }}</p></div>
+        <span class="review-status review-status--{{ proposal.status }}">{{ proposal.get_status_display }}</span>
+      </header>
+      <div class="review-item__body">
+        <dl class="review-meta">
+          <div><dt>Proposed by</dt><dd>{{ proposal.submitted_by.get_full_name|default:proposal.submitted_by.username }}</dd></div>
+          <div><dt>Submitted on</dt><dd>{{ proposal.created_at|date:"d M Y, g:i A" }}</dd></div>
+          <div><dt>Submitting assignment</dt><dd>{{ proposal.assignment.get_status_display }}</dd></div>
+          <div><dt>Assigned on</dt><dd>{{ proposal.assignment.created_at|date:"d M Y, g:i A" }}</dd></div>
+        </dl>
+
+        <div class="review-comparison" aria-label="Current and proposed information">
+          <section class="review-comparison__column"><h4>Current information</h4><ul class="review-values">{% for value in row.current_values %}<li>{{ value }}</li>{% empty %}<li>No current recorded value.</li>{% endfor %}</ul></section>
+          <section class="review-comparison__column"><h4>Proposed information</h4><ul class="review-values">{% for value in row.proposed_values %}<li class="review-proposed-value">{{ value }}</li>{% empty %}<li>No proposed value.</li>{% endfor %}</ul></section>
+        </div>
+        <p class="review-note">Recorded when submitted: {% for value in row.submitted_values %}{{ value }}{% if not forloop.last %} · {% endif %}{% empty %}No recorded value.{% endfor %}</p>
+
+        {% if row.stale %}<aside class="review-alert" role="alert"><h4>Current information has changed</h4><p>The current record differs from the information available when this proposal was submitted. Approval is blocked; request a fresh submission instead.</p></aside>{% endif %}
+
+        <section class="review-evidence" aria-label="Collector evidence">
+          <div><h4>Collector explanation</h4><p>{{ proposal.explanation }}</p>{% if proposal.evidence_reference %}<div class="review-evidence__reference"><h4>Supporting reference</h4><p>{{ proposal.evidence_reference }}</p></div>{% endif %}</div>
+          <div>{% if row.evidence_allowed %}<a class="review-link" href="{% url 'download_document' proposal.evidence.pk %}" target="_blank" rel="noopener noreferrer">View supporting document</a>{% elif proposal.evidence %}<p class="review-note">Document unavailable for your access.</p>{% else %}<p class="review-note">No supporting document.</p>{% endif %}</div>
+        </section>
+
+        {% if proposal.category == 'payment_arrangement' %}<p class="review-note review-note--warning">Validating a payment arrangement does not verify payment, update the balance, fulfill a promise to pay, or close the account.</p>{% elif proposal.category == 'address' %}<p class="review-note">Approval adds a verified address. The assigned collection location stays unchanged.</p>{% endif %}
+
+        {% if proposal.status == 'pending' %}
+          {% if row.self_review %}<aside class="review-alert" role="alert"><h4>Independent review required</h4><p>You cannot review your own submission. Another authorized reviewer must decide.</p></aside>
+          {% else %}<form method="post" action="{% url 'backoffice_information_decision' proposal.pk %}" class="review-decision">
+            {% csrf_token %}<input type="hidden" name="status" value="{{ filters.status }}"><input type="hidden" name="category" value="{{ filters.category }}"><input type="hidden" name="q" value="{{ filters.query }}"><input type="hidden" name="page" value="{{ page_obj.number }}">
+            {{ row.form.non_field_errors }}
+            <h4>Decision</h4>
+            {% for field in row.form %}<div class="review-decision-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<p class="review-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endfor %}
+            <div class="review-decision__actions"><button class="review-button review-button--primary" type="submit">Save decision</button></div>
+          </form>{% endif %}
+        {% else %}<p class="review-complete">Reviewed by {{ proposal.reviewed_by.get_full_name|default:proposal.reviewed_by.username }} on {{ proposal.reviewed_at|date:"d M Y, g:i A" }}.{% if proposal.review_reason %} Review note: {{ proposal.review_reason }}{% endif %}</p>{% endif %}
+      </div>
+    </article>
+  {% endwith %}{% empty %}
+    <section class="review-empty"><h3>No matching proposals</h3><p>Try another filter or search. New submissions appear here when their client is within your access.</p></section>
+  {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}<nav class="review-pagination" aria-label="Information proposal pages">{% if page_obj.has_previous %}<a class="review-button" href="?status={{ filters.status|urlencode }}&amp;category={{ filters.category|urlencode }}&amp;q={{ filters.query|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}<span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="review-button" href="?status={{ filters.status|urlencode }}&amp;category={{ filters.category|urlencode }}&amp;q={{ filters.query|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
+</section>
+{% endtimezone %}{% endblock %}

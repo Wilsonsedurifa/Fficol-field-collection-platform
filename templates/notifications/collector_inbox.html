@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static tz %}
+
+{% block title %}Notifications | FiCol{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/notifications/inbox.css' %}">
+{% endblock %}
+
+{% block sidebar %}
+{% include "components/sidebar.html" %}
+{% endblock %}
+
+{% block navbar %}
+{% include "components/navbar.html" with navbar_title="Notifications" %}
+{% endblock %}
+
+{% block content %}
+{% timezone "Asia/Manila" %}
+<main class="notifications-page" aria-label="Notifications inbox">
+  {% include "notifications/_inbox_list.html" %}
+</main>
+{% endtimezone %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/components/sidebar.js' %}" defer></script>
+{% endblock %}

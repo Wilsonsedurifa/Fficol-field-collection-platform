@@ -1,0 +1,17 @@
+{% extends "backoffice/base.html" %}
+{% load static tz %}
+
+{% block title %}Notifications | FiCol Back Office{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/backoffice/portal.css' %}">
+<link rel="stylesheet" href="{% static 'css/notifications/inbox.css' %}">
+{% endblock %}
+
+{% block backoffice_content %}
+{% timezone "Asia/Manila" %}
+<section class="notifications-page" aria-label="Notifications inbox">
+  {% include "notifications/_inbox_list.html" %}
+</section>
+{% endtimezone %}
+{% endblock %}

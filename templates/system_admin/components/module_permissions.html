@@ -1,0 +1,24 @@
+<fieldset class="sa-fieldset" data-permission-section>
+  <legend class="sa-legend">Back Office permissions <span class="sa-required">*</span></legend>
+  <p class="sa-fieldset-desc" id="module-permissions-help">Select sidebar modules. Each includes its standard actions for authorized clients. Dashboard access is included.</p>
+  <p class="perm-count" data-permission-count role="status" aria-live="polite"></p>
+  {% regroup permission_groups by group as grouped_permissions %}
+  {% for group in grouped_permissions %}
+  <fieldset class="perm-group" data-permission-group>
+    <legend>{{ group.grouper }}</legend>
+    <div class="perm-group-actions" hidden data-group-controls>
+      <button type="button" data-permission-select="all" aria-label="Select all {{ group.grouper }} permissions">Select all</button>
+      <button type="button" data-permission-select="clear" aria-label="Clear {{ group.grouper }} permissions">Clear</button>
+    </div>
+    <div class="perm-grid">
+      {% for permission in group.list %}
+      <label class="perm-card" for="module-{{ permission.key }}">
+        <input type="checkbox" id="module-{{ permission.key }}" name="modules" value="{{ permission.key }}" {% if permission.key in form.modules.value %}checked{% endif %} aria-describedby="module-help-{{ permission.key }}">
+        <span><strong>{{ permission.label }}</strong><small id="module-help-{{ permission.key }}">{{ permission.description }}</small></span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+  {% for error in form.modules.errors %}<p class="sa-field-error" role="alert">{{ error }}</p>{% endfor %}
+</fieldset>

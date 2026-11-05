@@ -1,0 +1,576 @@
+/* Collector dashboard styles. Shared theme tokens are in css/app.css. */
+
+/* Panels & Cards */
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  gap: 8px;
+}
+
+.panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-subtitle {
+  font-size: 12px;
+  color: var(--text-subtle);
+  margin-top: 2px;
+}
+
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.badge-primary {
+  background: var(--primary-light);
+  color: var(--primary-text);
+  border: 1px solid var(--primary-border);
+}
+
+.badge-emerald {
+  background: var(--emerald-light);
+  color: var(--emerald-text);
+  border: 1px solid var(--emerald-border);
+}
+
+.badge-amber {
+  background: var(--amber-light);
+  color: var(--amber-text);
+  border: 1px solid var(--amber-border);
+}
+
+.badge-rose {
+  background: var(--rose-light);
+  color: var(--rose-text);
+  border: 1px solid var(--rose-border);
+}
+
+.badge-subtle {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.btn-sm {
+  min-height: 38px;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+}
+
+.btn-decline {
+  background: #ffffff;
+  color: var(--rose);
+  border: 1px solid var(--rose-border);
+}
+
+.btn-decline:hover:not(:disabled) {
+  background: var(--rose-light);
+}
+
+.btn:disabled {
+  background: var(--bg-subtle);
+  color: var(--text-subtle);
+  border-color: var(--border-subtle);
+  cursor: not-allowed;
+}
+
+/* Availability & Telemetry */
+.availability-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.switch-ui {
+  width: 52px;
+  height: 30px;
+  background: var(--border-strong);
+  border-radius: 9999px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.switch-ui.is-online {
+  background: var(--emerald);
+}
+
+.switch-ui.is-busy {
+  background: var(--amber);
+}
+
+.switch-handle {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+
+.switch-ui.is-online .switch-handle,
+.switch-ui.is-busy .switch-handle {
+  transform: translateX(22px);
+}
+
+.telemetry-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.telemetry-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.telemetry-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--bg-page);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.telemetry-icon.is-active {
+  background: var(--emerald-light);
+  color: var(--emerald);
+}
+
+.telemetry-icon.is-warning {
+  background: var(--amber-light);
+  color: var(--amber);
+}
+
+.telemetry-icon.is-error {
+  background: var(--rose-light);
+  color: var(--rose);
+}
+
+.notice-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 14px;
+  line-height: 1.4;
+}
+
+.notice-box strong {
+  color: var(--text-main);
+}
+
+/* Offers Grid */
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.offer-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.offer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.offer-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.offer-area {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 6px;
+}
+
+.offer-dist {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.offer-terms-box {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.terms-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.terms-label {
+  color: var(--text-subtle);
+}
+
+.terms-value {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.terms-commission {
+  font-weight: 700;
+  color: var(--emerald);
+}
+
+.privacy-notice {
+  font-size: 11px;
+  color: var(--text-subtle);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.offer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Desktop Data Table */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+table.data-table th {
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+table.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
+table.data-table tr:hover td {
+  background: var(--bg-subtle);
+}
+
+table.data-table .cell-primary {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Mobile Account Cards */
+.mobile-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.acc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+  font-size: 12px;
+}
+
+/* Follow-ups List */
+.followup-item {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+@media (min-width: 640px) {
+  .followup-item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.followup-item.is-overdue {
+  background: var(--rose-light);
+  border-color: var(--rose-border);
+}
+
+/* Commissions Grid */
+.commissions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.comm-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comm-card.is-approved {
+  border-color: var(--emerald-border);
+  background: #f0fdf4;
+}
+
+.comm-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comm-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  margin: 4px 0;
+}
+
+.comm-card.is-approved .comm-amount {
+  color: var(--emerald);
+}
+
+.comm-desc {
+  font-size: 11px;
+  color: var(--text-subtle);
+  line-height: 1.4;
+}
+
+/* Empty / Unconnected State Callouts */
+.empty-callout {
+  padding: 32px 16px;
+  text-align: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg-subtle);
+}
+
+.empty-callout-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.empty-callout-text {
+  font-size: 12px;
+  color: var(--text-subtle);
+  margin-top: 4px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Responsive Visibility Helpers */
+@media (max-width: 1023px) {
+  .desktop-table-view {
+    display: none !important;
+  }
+  .mobile-cards-view {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-table-view {
+    display: block !important;
+  }
+  .mobile-cards-view {
+    display: none !important;
+  }
+}
+
+
+/* Styles relocated from the collector template. */
+.collector-dashboard .row-start { display: flex; align-items: flex-start; gap: 12px; }
+.collector-dashboard .row-inline { display: flex; align-items: center; gap: 8px; }
+.collector-dashboard .status-heading { font-size: 14px; font-weight: 700; color: var(--text-main); }
+.collector-dashboard .helper-text { font-size: 12px; color: var(--text-subtle); margin-top: 2px; }
+.collector-dashboard .helper-note { color: var(--text-subtle); font-style: italic; }
+.collector-dashboard .text-strong { font-weight: 700; color: var(--text-main); }
+.collector-dashboard .location-status { font-weight: 600; color: var(--text-muted); }
+.collector-dashboard .location-meta { font-size: 11px; color: var(--text-subtle); margin-top: 1px; }
+.collector-dashboard .error-panel { background: var(--rose-light); border-color: var(--rose-border); color: var(--rose-text); font-size: 13px; }
+.collector-dashboard .text-main { color: var(--text-main); }
+.collector-dashboard .distance-note { color: var(--text-subtle); display: block; font-size: 11px; }
+.collector-dashboard .terms-divider { border-top: 1px solid var(--border-subtle); padding-top: 4px; }
+.collector-dashboard .action-group { display: flex; gap: 8px; }
+.collector-dashboard .grid-full { grid-column: 1 / -1; }
+.collector-dashboard .align-right { text-align: right; }
+.collector-dashboard .text-bold { font-weight: 700; }
+.collector-dashboard .deadline-normal { color: var(--text-muted); font-weight: 500; }
+.collector-dashboard .action-spaced { margin-left: 6px; }
+.collector-dashboard .table-empty { padding: 24px; text-align: center; color: var(--text-subtle); font-style: italic; }
+.collector-dashboard .text-muted { font-size: 12px; color: var(--text-muted); }
+.collector-dashboard .text-small { font-size: 11px; color: var(--text-subtle); }
+.collector-dashboard .deadline-emphasis { font-weight: 600; color: var(--text-main); }
+.collector-dashboard .action-group-tight { display: flex; gap: 6px; }
+.collector-dashboard .followup-list { display: flex; flex-direction: column; gap: 10px; }
+.collector-dashboard .task-meta { font-size: 11px; color: var(--text-subtle); margin-top: 2px; }
+.collector-dashboard .reporting-period { font-size: 12px; color: var(--text-subtle); }
+.collector-dashboard .amount-unavailable { font-size: 14px; font-weight: normal; color: var(--text-subtle); }
+.collector-dashboard .commission-approved-label { color: var(--emerald-text); }
+.collector-dashboard .points-header { margin-bottom: 10px; }
+.collector-dashboard .points-summary { background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+.collector-dashboard .points-label { font-size: 12px; color: var(--text-subtle); font-weight: 500; display: block; }
+.collector-dashboard .points-value { font-size: 26px; font-weight: 800; color: var(--text-main); line-height: 1.1; margin-top: 2px; }
+.collector-dashboard .points-unit { font-size: 13px; font-weight: 500; color: var(--text-subtle); }
+.collector-dashboard .points-status { font-size: 12px; color: var(--text-subtle); text-align: right; }
+.collector-dashboard .text-success { color: var(--emerald); }
+.collector-dashboard .approval-panel.approval-pending { border-color: var(--amber-border); background: var(--amber-light); }
+.collector-dashboard .approval-panel.approval-restricted { border-color: var(--rose-border); background: var(--rose-light); }
+.collector-dashboard .approval-icon { padding: 6px; border-radius: 8px; background: #ffffff; color: var(--rose); flex-shrink: 0; }
+.collector-dashboard .approval-title { font-size: 15px; font-weight: 700; color: var(--rose-text); }
+.collector-dashboard .approval-description { font-size: 13px; color: var(--rose-text); margin-top: 4px; line-height: 1.4; }
+.collector-dashboard .approval-pending .approval-icon { color: var(--amber); }
+.collector-dashboard .approval-pending .approval-title, .collector-dashboard .approval-pending .approval-description { color: var(--amber-text); }
+.collector-dashboard .task-title { font-weight: 700; color: var(--text-main); }
+.collector-dashboard .task-due { color: var(--text-main); }
+.collector-dashboard .followup-item.is-overdue .task-title, .collector-dashboard .followup-item.is-overdue .task-due { color: var(--rose-text); }
